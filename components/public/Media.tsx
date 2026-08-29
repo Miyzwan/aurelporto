@@ -11,16 +11,26 @@ interface MediaProps {
   showCaption?: boolean;
   className?: string;
   frameClassName?: string;
+  /** Image-only: lets a drawing opt into object-contain instead of cropping. */
+  imageClassName?: string;
 }
 
 /**
  * Dispatches on `mediaType` so section renderers can accept "a media asset"
  * without branching on image versus video at every call site.
  */
-export function Media({ asset, sizes, priority, ambient, ...rest }: MediaProps) {
+export function Media({ asset, sizes, priority, ambient, imageClassName, ...rest }: MediaProps) {
   if (asset.mediaType === "video") {
     return <VideoMedia asset={asset} ambient={ambient} {...rest} />;
   }
 
-  return <ImageMedia asset={asset} sizes={sizes} priority={priority} {...rest} />;
+  return (
+    <ImageMedia
+      asset={asset}
+      sizes={sizes}
+      priority={priority}
+      imageClassName={imageClassName}
+      {...rest}
+    />
+  );
 }
