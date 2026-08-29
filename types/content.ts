@@ -222,3 +222,48 @@ export interface GalleryContent {
   intro: string;
   mediaIds: string[];
 }
+
+/**
+ * Mirrors `site_settings.inquiry_config`. Every option list is CMS-owned so the
+ * contact form can be re-scoped without a deploy.
+ */
+export interface InquiryConfig {
+  projectTypes: string[];
+  projectStatuses: string[];
+  timelineOptions: string[];
+  budgetOptions: string[];
+  showBudgetField: boolean;
+  showPhoneField: boolean;
+  successTitle: string;
+  successBody: string;
+}
+
+export interface ServiceDetail extends ServiceSummary {
+  fullDescription: string | null;
+  idealClient: string | null;
+  scope: string[];
+  deliverables: string[];
+  included: string[];
+  excluded: string[];
+  typicalProjectTypes: string[];
+}
+
+/** A capability the designer works with — tool plus what it is used for. */
+export interface SoftwareCapability {
+  name: string;
+  application: string;
+}
+
+export interface EducationEntry {
+  institution: string;
+  qualification: string | null;
+  detail: string | null;
+  period: string | null;
+}
+
+export interface ExperienceEntry {
+  title: string;
+  organisation: string | null;
+  year: string;
+  description: string;
+}

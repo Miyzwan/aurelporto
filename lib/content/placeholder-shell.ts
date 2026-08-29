@@ -31,7 +31,8 @@ export const placeholderHeaderNavigation: NavigationItem[] = [
   { label: "Process", href: "/process" },
   { label: "About", href: "/about" },
   { label: "Explorations", href: "/explorations" },
-  { label: "Contact", href: "/contact" },
+  // No Contact entry: the header CTA slot already points there, and listing it
+  // twice reads as a duplicate.
 ].map((item, index) => ({
   ...item,
   id: `header-${item.href}`,
