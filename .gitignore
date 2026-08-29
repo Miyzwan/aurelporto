@@ -23,6 +23,23 @@
 # misc
 .DS_Store
 *.pem
+*.key
+*.cert
+*.secret
+credentials*
+
+# markdown and project spec docs
+*.md
+
+# AI tools and agent configurations
+.claude/
+.gemini/
+.cursor/
+.windsurf/
+.antigravity/
+.ai/
+AGENTS.md
+CLAUDE.md
 
 # debug
 npm-debug.log*
@@ -32,6 +49,10 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
 
 # vercel
 .vercel
@@ -40,7 +61,7 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# allow the committed environment contract
+# allow the committed environment contract template
 !.env.example
 
 # playwright
