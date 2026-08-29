@@ -1,26 +1,222 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* ---------------------------------------------------------------------------
+   Design tokens — PRD Part C (Visual Direction).
+
+   The palette is deliberately warm-neutral and light-only. Interior
+   photography is the primary colour source; a dark inversion would fight the
+   material tones in the renders, so no `prefers-color-scheme` variant is
+   defined. Final values follow the designer's brand identity once confirmed.
+--------------------------------------------------------------------------- */
+
+@theme {
+  /* Brand-neutral starting palette (PRD §8) */
+  --color-ink: #171714;
+  --color-warm-white: #f2f0e9;
+  --color-stone: #d9d3c7;
+  --color-taupe: #a49b8c;
+
+  /* Semantic roles — components reference these, never the raw swatches */
+  --color-canvas: var(--color-warm-white);
+  --color-surface: #fbfaf6;
+  --color-surface-sunken: var(--color-stone);
+  --color-foreground: var(--color-ink);
+  --color-foreground-muted: #5c584f;
+  --color-foreground-subtle: var(--color-taupe);
+  --color-line: rgb(23 23 20 / 0.16);
+  --color-line-strong: rgb(23 23 20 / 0.32);
+  --color-focus: #171714;
+  --color-critical: #8c2f1f;
+
+  /* Type families — bound to next/font variables in app/layout.tsx */
+  --font-display: var(--font-editorial-serif), "Iowan Old Style", Georgia, serif;
+  --font-sans: var(--font-neutral-sans), ui-sans-serif, system-ui, sans-serif;
+
+  /* Fluid type scale (PRD §9). Metadata stays fixed for legibility. */
+  --text-display: clamp(3.25rem, 9vw, 10rem); /* project title 72–160px */
+  --text-display--line-height: 0.92;
+  --text-display--letter-spacing: -0.02em;
+
+  --text-statement: clamp(2.75rem, 7vw, 8.75rem); /* hero statement 64–140px */
+  --text-statement--line-height: 0.96;
+  --text-statement--letter-spacing: -0.02em;
+
+  --text-heading: clamp(2rem, 4vw, 4.5rem); /* section heading 40–72px */
+  --text-heading--line-height: 1.04;
+  --text-heading--letter-spacing: -0.015em;
+
+  --text-subheading: clamp(1.375rem, 2.2vw, 2rem);
+  --text-subheading--line-height: 1.18;
+
+  --text-body: clamp(1rem, 0.95rem + 0.25vw, 1.25rem); /* 16–20px */
+  --text-body--line-height: 1.6;
+
+  --text-spec: clamp(0.8125rem, 0.78rem + 0.15vw, 1rem); /* 12–16px */
+  --text-spec--line-height: 1.45;
+
+  --text-meta: 0.8125rem; /* 12–14px */
+  --text-meta--line-height: 1.35;
+  --text-meta--letter-spacing: 0.08em;
+
+  /* Layout */
+  --spacing-gutter: 1.5rem;
+  --spacing-section: clamp(5rem, 10vw, 12rem);
+  --spacing-section-tight: clamp(3rem, 6vw, 7rem);
+  --container-editorial: 100rem;
+  --container-reading: 46rem;
+
+  /* Borders */
+  --radius-none: 0px;
+  --radius-subtle: 2px;
+
+  /* Motion — restrained by direction (PRD §11) */
+  --duration-instant: 120ms;
+  --duration-quick: 240ms;
+  --duration-base: 480ms;
+  --duration-slow: 900ms;
+  --duration-reveal: 1200ms;
+  --ease-out-editorial: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out-editorial: cubic-bezier(0.65, 0, 0.35, 1);
+
+  /* Breakpoints per master plan: mobile <768, tablet 768–1279, desktop >=1280.
+     Added alongside Tailwind's defaults rather than replacing them. */
+  --breakpoint-tablet: 768px;
+  --breakpoint-desktop: 1280px;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+  body {
+    background-color: var(--color-canvas);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    font-size: var(--text-body);
+    line-height: var(--text-body--line-height);
+    font-synthesis-weight: none;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Visible focus for every keyboard entry point. Never remove without a
+     replacement indicator — PRD Part R. */
+  :focus-visible {
+    outline: 2px solid var(--color-focus);
+    outline-offset: 3px;
+    border-radius: var(--radius-subtle);
+  }
+
+  :focus:not(:focus-visible) {
+    outline: none;
+  }
+
+  ::selection {
+    background-color: var(--color-ink);
+    color: var(--color-warm-white);
+  }
+
+  /* Long project titles and Indonesian place names must not overflow. */
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+    overflow-wrap: anywhere;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  img,
+  video {
+    display: block;
+    max-width: 100%;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@layer components {
+  /* 12-column editorial grid (PRD §10). Column count is constant so that
+     `col-span-*` placements stay predictable; the gutter and page margin are
+     what respond. */
+  .grid-editorial {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    column-gap: var(--spacing-gutter);
+    row-gap: var(--spacing-gutter);
+  }
+
+  .container-editorial {
+    width: 100%;
+    max-width: var(--container-editorial);
+    margin-inline: auto;
+    padding-inline: var(--spacing-gutter);
+  }
+
+  .container-reading {
+    width: 100%;
+    max-width: var(--container-reading);
+  }
+
+  /* Uppercase tracked metadata used for eyebrows, specs, and filters. */
+  .type-meta {
+    font-family: var(--font-sans);
+    font-size: var(--text-meta);
+    line-height: var(--text-meta--line-height);
+    letter-spacing: var(--text-meta--letter-spacing);
+    text-transform: uppercase;
+  }
+
+  .type-display {
+    font-family: var(--font-display);
+    font-size: var(--text-display);
+    line-height: var(--text-display--line-height);
+    letter-spacing: var(--text-display--letter-spacing);
+    font-weight: 400;
+  }
+
+  .type-statement {
+    font-family: var(--font-display);
+    font-size: var(--text-statement);
+    line-height: var(--text-statement--line-height);
+    letter-spacing: var(--text-statement--letter-spacing);
+    font-weight: 400;
+  }
+
+  .type-heading {
+    font-family: var(--font-display);
+    font-size: var(--text-heading);
+    line-height: var(--text-heading--line-height);
+    letter-spacing: var(--text-heading--letter-spacing);
+    font-weight: 400;
+  }
+
+  .rule-hairline {
+    border-top: 1px solid var(--color-line);
+  }
+}
+
+@media (min-width: 768px) {
+  :root {
+    --spacing-gutter: 2rem;
+  }
+}
+
+@media (min-width: 1280px) {
+  :root {
+    --spacing-gutter: 2.5rem;
+  }
+}
+
+/* Master plan §26: honour reduced motion globally. Section timelines also
+   check this at the JS level in FE-009. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
