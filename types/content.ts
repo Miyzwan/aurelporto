@@ -47,3 +47,26 @@ export interface CallToAction {
   label: string;
   href: string;
 }
+
+export type MediaType = "image" | "video";
+
+/**
+ * Presentation view model for a row of `media_assets`.
+ *
+ * `width`/`height` are nullable because the admin uploader cannot always probe
+ * intrinsic dimensions. Media components therefore never rely on them for
+ * layout stability — they reserve space from an aspect ratio instead.
+ */
+export interface MediaAsset {
+  id: string;
+  bucket: string;
+  storagePath: string;
+  mediaType: MediaType;
+  altText: string;
+  caption: string | null;
+  photographer: string | null;
+  width: number | null;
+  height: number | null;
+  posterPath: string | null;
+  mimeType: string;
+}
