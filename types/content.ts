@@ -70,3 +70,155 @@ export interface MediaAsset {
   posterPath: string | null;
   mimeType: string;
 }
+
+/* -------------------------------------------------------------------------
+   Collection view models
+------------------------------------------------------------------------- */
+
+export type ProjectStatus = "concept" | "ongoing" | "completed";
+
+/** The fields a project card needs. Case studies extend this in FE-007. */
+export interface ProjectSummary {
+  id: string;
+  slug: string;
+  title: string;
+  year: number;
+  location: string;
+  projectType: string;
+  areaSqm: number | null;
+  projectStatus: ProjectStatus;
+  summary: string;
+  heroMedia: MediaAsset | null;
+  featured: boolean;
+  featuredOrder: number;
+  sortOrder: number;
+}
+
+export interface ServiceSummary {
+  id: string;
+  slug: string;
+  name: string;
+  shortDescription: string;
+  media: MediaAsset | null;
+  sortOrder: number;
+}
+
+export interface ProcessStep {
+  id: string;
+  stepNo: number;
+  title: string;
+  description: string;
+  media: MediaAsset | null;
+  sortOrder: number;
+}
+
+export interface Testimonial {
+  id: string;
+  clientName: string;
+  clientRole: string | null;
+  projectName: string | null;
+  quote: string;
+  sortOrder: number;
+}
+
+export interface ExplorationSummary {
+  id: string;
+  slug: string;
+  title: string;
+  category: string;
+  description: string | null;
+  year: number | null;
+  coverMedia: MediaAsset | null;
+  sortOrder: number;
+}
+
+/* -------------------------------------------------------------------------
+   Page section content shapes
+
+   These mirror the canonical JSON in master plan section 5 exactly. INT-004
+   validates the same shapes with Zod; keep the two in step.
+------------------------------------------------------------------------- */
+
+export interface HomeHeroContent {
+  eyebrow: string;
+  headline: string;
+  subheadline: string;
+  location: string;
+  heroMediaId: string | null;
+  signatureProjectId: string | null;
+  primaryCtaLabel: string;
+  primaryCtaHref: string;
+  secondaryCtaLabel: string;
+  secondaryCtaHref: string;
+}
+
+export interface PositioningContent {
+  eyebrow: string;
+  lines: string[];
+  body: string;
+}
+
+export interface FeaturedProjectsContent {
+  title: string;
+  intro: string;
+  maxItems: number;
+}
+
+export interface PhilosophyItem {
+  title: string;
+  body: string;
+}
+
+export interface PhilosophyContent {
+  title: string;
+  intro: string;
+  items: PhilosophyItem[];
+}
+
+export interface ServicesPreviewContent {
+  title: string;
+  intro: string;
+  maxItems: number;
+}
+
+export interface ProcessPreviewContent {
+  title: string;
+  intro: string;
+  maxItems: number;
+}
+
+export interface MaterialMomentContent {
+  title: string;
+  intro: string;
+  mediaIds: string[];
+}
+
+export interface CredibilityStat {
+  value: string;
+  label: string;
+}
+
+export interface CredibilityContent {
+  title: string;
+  stats: CredibilityStat[];
+  testimonialIds: string[];
+}
+
+export interface CtaContent {
+  eyebrow: string;
+  title: string;
+  body: string;
+  ctaLabel: string;
+  ctaHref: string;
+}
+
+export interface RichTextContent {
+  title: string;
+  body: string;
+}
+
+export interface GalleryContent {
+  title: string;
+  intro: string;
+  mediaIds: string[];
+}
