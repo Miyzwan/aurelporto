@@ -57,6 +57,9 @@ export interface SiteSettings {
   whatsapp: string | null;
   socialLinks: SocialLink[];
   footerText: string | null;
+  defaultSeoTitle?: string | null;
+  defaultSeoDescription?: string | null;
+  defaultOgMediaId?: string | null;
 }
 
 export interface CallToAction {

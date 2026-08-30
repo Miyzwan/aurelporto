@@ -29,6 +29,9 @@ export function mapSiteSettings(row: Tables<"site_settings">): SiteSettings {
     whatsapp: settings.whatsapp,
     socialLinks: settings.social_links,
     footerText: settings.footer_text,
+    defaultSeoTitle: settings.default_seo_title,
+    defaultSeoDescription: settings.default_seo_description,
+    defaultOgMediaId: settings.default_og_media_id,
   };
 }
 

@@ -1,15 +1,34 @@
+import type { Metadata } from "next";
+
 import { HomeSectionRenderer } from "@/components/home/HomeSectionRenderer";
 import { getHomePageSections } from "@/lib/content/home-sections";
+import { getPublicSiteSettings } from "@/lib/data/site";
+import { generatePageMetadata } from "@/lib/seo/metadata";
+import {
+  buildPersonOrOrganizationSchema,
+  buildWebSiteSchema,
+  StructuredData,
+} from "@/lib/seo/structured-data";
 
-/**
- * Home content is request-time data. The adapter reads only published/enabled
- * rows and resolves the optional relations before the renderer dispatches
- * through the public section registry.
- */
 export const dynamic = "force-dynamic";
 
-export default async function HomePage() {
-  const sections = await getHomePageSections();
+export async function generateMetadata(): Promise<Metadata> {
+  return generatePageMetadata("home");
+}
 
-  return <HomeSectionRenderer sections={sections} />;
+export default async function HomePage() {
+  const [sections, siteSettings] = await Promise.all([
+    getHomePageSections(),
+    getPublicSiteSettings(),
+  ]);
+
+  const personSchema = buildPersonOrOrganizationSchema(siteSettings);
+  const websiteSchema = buildWebSiteSchema(siteSettings);
+
+  return (
+    <>
+      <StructuredData data={[personSchema, websiteSchema]} />
+      <HomeSectionRenderer sections={sections} />
+    </>
+  );
 }

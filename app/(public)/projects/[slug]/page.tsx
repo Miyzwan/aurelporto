@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { NextProject } from "@/components/projects/NextProject";
@@ -9,9 +10,22 @@ import {
   getPublishedProjectBySlug,
   getPublishedProjectSections,
 } from "@/lib/data/projects";
+import { getPublicSiteSettings } from "@/lib/data/site";
+import { generateProjectMetadata } from "@/lib/seo/metadata";
+import {
+  buildBreadcrumbSchema,
+  buildProjectSchema,
+  StructuredData,
+} from "@/lib/seo/structured-data";
 
-/** Project content is read on every request so publish state is authoritative. */
 export const dynamic = "force-dynamic";
+
+export async function generateMetadata({
+  params,
+}: PageProps<"/projects/[slug]">): Promise<Metadata> {
+  const { slug } = await params;
+  return generateProjectMetadata(slug);
+}
 
 export default async function ProjectCaseStudyPage({ params }: PageProps<"/projects/[slug]">) {
   const { slug } = await params;
@@ -19,13 +33,22 @@ export default async function ProjectCaseStudyPage({ params }: PageProps<"/proje
   const project = await getPublishedProjectBySlug(slug);
   if (!project) notFound();
 
-  const [sections, next] = await Promise.all([
+  const [sections, next, siteSettings] = await Promise.all([
     getPublishedProjectSections(project.id),
     getNextPublishedProject(project.id),
+    getPublicSiteSettings(),
+  ]);
+
+  const projectSchema = buildProjectSchema(project, siteSettings);
+  const breadcrumbSchema = buildBreadcrumbSchema([
+    { name: "Home", path: "/" },
+    { name: "Projects", path: "/projects" },
+    { name: project.title, path: `/projects/${project.slug}` },
   ]);
 
   return (
     <>
+      <StructuredData data={[projectSchema, breadcrumbSchema]} />
       <ProjectHero project={project} />
       <ProjectFacts project={project} />
       <ProjectSectionRenderer sections={sections} />

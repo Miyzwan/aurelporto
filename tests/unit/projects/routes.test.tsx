@@ -10,10 +10,14 @@ const mocks = vi.hoisted(() => ({
   getPublishedProjectBySlug: vi.fn(),
   getPublishedProjectSections: vi.fn(),
   getPublishedProjects: vi.fn(),
+  getPublicSiteSettings: vi.fn(),
   notFound: vi.fn(),
 }));
 
 vi.mock("next/navigation", () => ({ notFound: mocks.notFound }));
+vi.mock("@/lib/data/site", () => ({
+  getPublicSiteSettings: mocks.getPublicSiteSettings,
+}));
 vi.mock("@/lib/data/projects", () => ({
   getNextPublishedProject: mocks.getNextPublishedProject,
   getPublishedProjectBySlug: mocks.getPublishedProjectBySlug,
@@ -109,6 +113,11 @@ describe("public project routes", () => {
     vi.clearAllMocks();
     mocks.notFound.mockImplementation(() => {
       throw new Error("NEXT_NOT_FOUND");
+    });
+    mocks.getPublicSiteSettings.mockResolvedValue({
+      siteName: "Gabrielle Aurelia",
+      professionalRole: "Interior Designer",
+      socialLinks: [],
     });
   });
 

@@ -1,18 +1,22 @@
 import type { Metadata } from "next";
 
 import { editorialSerif, neutralSans } from "@/lib/fonts";
+import { generateRootMetadata } from "@/lib/seo/metadata";
 import { cn } from "@/lib/utils/cn";
 
 import "./globals.css";
 
-/**
- * Placeholder metadata only. INT-015 replaces this with database-driven
- * defaults read from `site_settings`; no business copy belongs here.
- */
-export const metadata: Metadata = {
-  title: "Interior Design Portfolio",
-  description: "Interior design portfolio.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  try {
+    return await generateRootMetadata();
+  } catch (error) {
+    console.error("[RootLayout] failed to generate root metadata:", error);
+    return {
+      title: "Gabrielle Aurelia — Interior Designer",
+      description: "Editorial interior architecture and spatial curation.",
+    };
+  }
+}
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (

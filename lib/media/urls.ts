@@ -1,7 +1,5 @@
 import type { MediaAsset } from "@/types/content";
 
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
-
 /**
  * True when a stored path is already a resolvable URL and must be used
  * verbatim: an absolute URL, or a root-relative path served from /public.
@@ -22,14 +20,15 @@ function isResolvedPath(path: string): boolean {
 export function storagePublicUrl(bucket: string, storagePath: string): string {
   if (isResolvedPath(storagePath)) return storagePath;
 
-  if (!SUPABASE_URL) {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  if (!supabaseUrl) {
     throw new Error(
       "NEXT_PUBLIC_SUPABASE_URL is not set — cannot resolve a Supabase Storage path. " +
         "Set it in .env.local, or use a /public fixture path during static frontend work.",
     );
   }
 
-  const base = SUPABASE_URL.replace(/\/+$/, "");
+  const base = supabaseUrl.replace(/\/+$/, "");
   const path = storagePath.replace(/^\/+/, "");
   return `${base}/storage/v1/object/public/${bucket}/${path}`;
 }
