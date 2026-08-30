@@ -6,7 +6,7 @@ import { inquiryRowSchema } from "@/lib/validation/inquiries";
 
 import { parseRecord, throwDatabaseError } from "./errors";
 
-function mapInquiry(row: Tables<"inquiries">): InquiryRecord {
+export function mapInquiry(row: Tables<"inquiries">): InquiryRecord {
   const inquiry = parseRecord(inquiryRowSchema, row, row.id, "inquiries");
 
   return {

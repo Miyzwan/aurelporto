@@ -468,3 +468,59 @@ export interface InquiryRecord {
   submittedAt: string;
   updatedAt: string;
 }
+
+export interface AdminSiteSettings extends SiteSettings {
+  defaultSeoTitle: string;
+  defaultSeoDescription: string;
+  defaultOgMediaId: string | null;
+  inquiryConfig: InquiryConfig;
+}
+
+export interface SiteSettingsMutationInput {
+  siteName: string;
+  professionalRole: string;
+  location: string | null;
+  serviceArea: string | null;
+  email: string | null;
+  phone: string | null;
+  whatsapp: string | null;
+  socialLinks: SocialLink[];
+  footerText: string | null;
+  defaultSeoTitle: string;
+  defaultSeoDescription: string;
+  defaultOgMediaId: string | null;
+  inquiryConfig: InquiryConfig;
+}
+
+export interface NavigationItemMutationInput {
+  id?: string;
+  label: string;
+  href: string;
+  placement: NavigationPlacement;
+  sortOrder: number;
+  isVisible: boolean;
+  targetBlank: boolean;
+}
+
+export interface PageMetadataMutationInput {
+  id?: string;
+  slug: string;
+  title: string;
+  navLabel: string | null;
+  seoTitle: string | null;
+  seoDescription: string | null;
+  ogMediaId: string | null;
+  status: ContentStatus;
+}
+
+export interface PageSectionMutationInput {
+  id?: string;
+  pageId: string;
+  sectionKey: string;
+  sectionType: PageSectionType;
+  content: PageSectionContent;
+  settings?: Record<string, unknown>;
+  sortOrder?: number;
+  isEnabled: boolean;
+  status: ContentStatus;
+}

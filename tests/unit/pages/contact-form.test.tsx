@@ -1,5 +1,6 @@
 import { render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import userEvent from "@testing-library/user-event";
+import { describe, expect, it, vi } from "vitest";
 
 import { ProjectInquiryForm } from "@/components/contact/ProjectInquiryForm";
 import { ExplorationGallery } from "@/components/explorations/ExplorationGallery";
@@ -86,6 +87,79 @@ describe("ProjectInquiryForm", () => {
       />,
     );
     expect(screen.queryByLabelText(/Budget/)).not.toBeInTheDocument();
+  });
+
+  it("submits the form and displays the success screen on successful submission", async () => {
+    const user = userEvent.setup();
+    const submitAction = vi.fn().mockResolvedValue({
+      ok: true,
+      data: {
+        successTitle: "Inquiry received",
+        successBody: "Your brief has reached us safely.",
+      },
+    });
+
+    render(
+      <ProjectInquiryForm
+        config={placeholderInquiryConfig}
+        services={placeholderServices}
+        submitAction={submitAction}
+      />,
+    );
+
+    await user.type(screen.getByLabelText("Name"), "Alex River");
+    await user.type(screen.getByLabelText("Email"), "alex@example.com");
+    await user.selectOptions(screen.getByLabelText("Project type"), "Hospitality");
+    await user.type(screen.getByLabelText("Project location"), "Bandung");
+    await user.selectOptions(
+      screen.getByLabelText("Required service"),
+      placeholderServices[0]!.name,
+    );
+    await user.selectOptions(screen.getByLabelText("Project status"), "New Build");
+    await user.selectOptions(screen.getByLabelText("Desired timeline"), "1–3 Months");
+    await user.type(screen.getByLabelText("Project brief"), "A new cafe interior concept.");
+
+    await user.click(screen.getByRole("button", { name: "Send inquiry" }));
+
+    expect(submitAction).toHaveBeenCalledWith(
+      expect.objectContaining({
+        name: "Alex River",
+        email: "alex@example.com",
+        projectType: "Hospitality",
+        projectLocation: "Bandung",
+        projectBrief: "A new cafe interior concept.",
+      }),
+    );
+
+    expect(await screen.findByRole("heading", { name: "Inquiry received" })).toBeInTheDocument();
+    expect(screen.getByText("Your brief has reached us safely.")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Send another inquiry" }));
+    expect(screen.getByLabelText("Name")).toBeInTheDocument();
+  });
+
+  it("displays field errors and form errors returned from action", async () => {
+    const user = userEvent.setup();
+    const submitAction = vi.fn().mockResolvedValue({
+      ok: false,
+      fieldErrors: {
+        email: ["Please provide a valid email address."],
+      },
+      formError: "Could not submit inquiry at this time.",
+    });
+
+    render(
+      <ProjectInquiryForm
+        config={placeholderInquiryConfig}
+        services={placeholderServices}
+        submitAction={submitAction}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Send inquiry" }));
+
+    expect(await screen.findByText("Please provide a valid email address.")).toBeInTheDocument();
+    expect(screen.getByText("Could not submit inquiry at this time.")).toBeInTheDocument();
   });
 });
 

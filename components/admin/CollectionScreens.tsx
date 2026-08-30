@@ -95,6 +95,12 @@ type TestimonialUpdateAction = (
 type TestimonialDeleteAction = (input: string) => Promise<ActionResult<{ id: string }>>;
 type TestimonialReorderAction = (input: string[]) => Promise<ActionResult>;
 
+type InquiryUpdateAction = (input: {
+  id: string;
+  status: InquiryStatus;
+  adminNotes?: string | null;
+}) => Promise<ActionResult<InquiryRecord>>;
+
 function draftId(prefix: string) {
   return `${prefix}-${typeof crypto !== "undefined" ? crypto.randomUUID() : Date.now()}`;
 }
@@ -2106,12 +2112,42 @@ export function InquiriesCollectionScreen({
   );
 }
 
-export function InquiryDetailScreen({ inquiry }: { inquiry: InquiryRecord }) {
+export function InquiryDetailScreen({
+  inquiry,
+  updateAction,
+}: {
+  inquiry: InquiryRecord;
+  updateAction?: InquiryUpdateAction;
+}) {
+  const [currentInquiry, setCurrentInquiry] = useState<InquiryRecord>(inquiry);
   const [status, setStatus] = useState<InquiryStatus>(inquiry.status);
   const [adminNotes, setAdminNotes] = useState(inquiry.adminNotes ?? "");
+  const [isSaving, setIsSaving] = useState(false);
   const [dirty, setDirty] = useState(false);
 
-  function save() {
+  async function save() {
+    if (updateAction) {
+      setIsSaving(true);
+      const result = await updateAction({
+        id: currentInquiry.id,
+        status,
+        adminNotes,
+      });
+      setIsSaving(false);
+
+      if (!result.ok) {
+        toast.error(result.formError ?? "The inquiry could not be updated.");
+        return;
+      }
+
+      if (result.data) {
+        setCurrentInquiry(result.data);
+      }
+      setDirty(false);
+      toast.success(result.message ?? "Inquiry updated.");
+      return;
+    }
+
     setDirty(false);
     toast.success("Inquiry draft updated.");
   }
@@ -2129,10 +2165,10 @@ export function InquiryDetailScreen({ inquiry }: { inquiry: InquiryRecord }) {
           <div>
             <p className="type-meta text-foreground-muted">Inquiry detail</p>
             <h1 className="font-display desktop:text-7xl mt-4 text-5xl leading-none tracking-tight">
-              {inquiry.name}
+              {currentInquiry.name}
             </h1>
             <p className="type-spec text-foreground-muted mt-4">
-              Received {formatDate(inquiry.submittedAt)} · {inquiry.email}
+              Received {formatDate(currentInquiry.submittedAt)} · {currentInquiry.email}
             </p>
           </div>
           <StatusBadge status={status} />
@@ -2142,21 +2178,23 @@ export function InquiryDetailScreen({ inquiry }: { inquiry: InquiryRecord }) {
         <section aria-labelledby="inquiry-brief-title">
           <p className="type-meta text-foreground-muted">Project brief</p>
           <h2 id="inquiry-brief-title" className="font-display mt-3 text-3xl">
-            {inquiry.projectType}
+            {currentInquiry.projectType}
           </h2>
           <p className="type-spec text-foreground-muted mt-2">
-            {inquiry.projectLocation}
-            {inquiry.areaSqm ? ` · ${inquiry.areaSqm} m²` : ""}
+            {currentInquiry.projectLocation}
+            {currentInquiry.areaSqm ? ` · ${currentInquiry.areaSqm} m²` : ""}
           </p>
-          <p className="type-spec mt-8 max-w-2xl whitespace-pre-wrap">{inquiry.projectBrief}</p>
+          <p className="type-spec mt-8 max-w-2xl whitespace-pre-wrap">
+            {currentInquiry.projectBrief}
+          </p>
           <dl className="border-line tablet:grid-cols-2 mt-10 grid gap-4 border-t pt-5">
             {[
-              ["Required service", inquiry.requiredService],
-              ["Project status", inquiry.projectStatus],
-              ["Desired timeline", inquiry.desiredTimeline],
-              ["Budget range", inquiry.budgetRange ?? "Not supplied"],
-              ["Phone", inquiry.phone ?? "Not supplied"],
-              ["Referral source", inquiry.referralSource ?? "Not supplied"],
+              ["Required service", currentInquiry.requiredService],
+              ["Project status", currentInquiry.projectStatus],
+              ["Desired timeline", currentInquiry.desiredTimeline],
+              ["Budget range", currentInquiry.budgetRange ?? "Not supplied"],
+              ["Phone", currentInquiry.phone ?? "Not supplied"],
+              ["Referral source", currentInquiry.referralSource ?? "Not supplied"],
             ].map(([label, value]) => (
               <div key={label}>
                 <dt className="type-meta text-foreground-muted">{label}</dt>
@@ -2200,11 +2238,12 @@ export function InquiryDetailScreen({ inquiry }: { inquiry: InquiryRecord }) {
           </div>
           <SaveBar
             hasChanges={dirty}
+            isSaving={isSaving}
             onSave={save}
             cancelLabel="Reset"
             onCancel={() => {
-              setStatus(inquiry.status);
-              setAdminNotes(inquiry.adminNotes ?? "");
+              setStatus(currentInquiry.status);
+              setAdminNotes(currentInquiry.adminNotes ?? "");
               setDirty(false);
             }}
           />

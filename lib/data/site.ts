@@ -2,7 +2,12 @@ import { requireAdmin } from "@/lib/auth/require-admin";
 import { createPublicSupabaseClient } from "@/lib/supabase/public";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import type { Tables } from "@/types/database.generated";
-import type { InquiryConfig, NavigationItem, SiteSettings } from "@/types/content";
+import type {
+  AdminSiteSettings,
+  InquiryConfig,
+  NavigationItem,
+  SiteSettings,
+} from "@/types/content";
 import {
   inquiryConfigSchema,
   navigationItemRowSchema,
@@ -11,7 +16,7 @@ import {
 
 import { parseRecord, throwDatabaseError, throwNotFound } from "./errors";
 
-function mapSiteSettings(row: Tables<"site_settings">): SiteSettings {
+export function mapSiteSettings(row: Tables<"site_settings">): SiteSettings {
   const settings = parseRecord(siteSettingsRowSchema, row, String(row.id), "site_settings");
 
   return {
@@ -27,7 +32,27 @@ function mapSiteSettings(row: Tables<"site_settings">): SiteSettings {
   };
 }
 
-function mapNavigationItem(row: Tables<"navigation_items">): NavigationItem {
+export function mapAdminSiteSettings(row: Tables<"site_settings">): AdminSiteSettings {
+  const settings = parseRecord(siteSettingsRowSchema, row, String(row.id), "site_settings");
+
+  return {
+    siteName: settings.site_name,
+    professionalRole: settings.professional_role,
+    location: settings.location,
+    serviceArea: settings.service_area,
+    email: settings.email,
+    phone: settings.phone,
+    whatsapp: settings.whatsapp,
+    socialLinks: settings.social_links,
+    footerText: settings.footer_text,
+    defaultSeoTitle: settings.default_seo_title,
+    defaultSeoDescription: settings.default_seo_description,
+    defaultOgMediaId: settings.default_og_media_id,
+    inquiryConfig: settings.inquiry_config,
+  };
+}
+
+export function mapNavigationItem(row: Tables<"navigation_items">): NavigationItem {
   const item = parseRecord(navigationItemRowSchema, row, row.id, "navigation_items");
 
   return {
@@ -89,9 +114,14 @@ export async function getPublicNavigation(): Promise<NavigationItem[]> {
   return readNavigation(createPublicSupabaseClient(), true);
 }
 
-export async function getAdminSiteSettings(): Promise<SiteSettings> {
+export async function getAdminSiteSettings(): Promise<AdminSiteSettings> {
   await requireAdmin();
-  return readSiteSettings(await createServerSupabaseClient());
+  const client = await createServerSupabaseClient();
+  const { data, error } = await client.from("site_settings").select("*").eq("id", 1).maybeSingle();
+  if (error) throwDatabaseError("site settings", error);
+  if (!data) throwNotFound("site settings");
+
+  return mapAdminSiteSettings(data);
 }
 
 export async function getAdminNavigation(): Promise<NavigationItem[]> {

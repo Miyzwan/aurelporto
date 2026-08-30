@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 
 import { InquiryDetailScreen } from "@/components/admin/CollectionScreens";
+import { updateInquiry } from "@/lib/actions/inquiries";
 import { getAdminInquiryById } from "@/lib/data/inquiries";
 
 export default async function AdminInquiryDetailPage({
@@ -12,5 +13,5 @@ export default async function AdminInquiryDetailPage({
   const inquiry = await getAdminInquiryById(id);
   if (!inquiry) notFound();
 
-  return <InquiryDetailScreen inquiry={inquiry} />;
+  return <InquiryDetailScreen inquiry={inquiry} updateAction={updateInquiry} />;
 }

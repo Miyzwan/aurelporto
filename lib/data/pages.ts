@@ -10,7 +10,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 import { parseRecord, throwDatabaseError } from "./errors";
 
-function mapPage(row: Tables<"pages">): Page {
+export function mapPage(row: Tables<"pages">): Page {
   const page = parseRecord(pageRowSchema, row, row.id, "pages");
 
   return {
@@ -25,7 +25,7 @@ function mapPage(row: Tables<"pages">): Page {
   };
 }
 
-function mapPageSection(row: Tables<"page_sections">): PageSection {
+export function mapPageSection(row: Tables<"page_sections">): PageSection {
   const section = parseRecord(pageSectionRowSchema, row, row.id, "page_sections");
   const content = parsePageSectionContent(section.section_type, section.content, section.id);
   const settings = parseRecord(
@@ -118,6 +118,35 @@ export async function getAdminPages(): Promise<Page[]> {
   if (error) throwDatabaseError("admin pages", error);
 
   return (data ?? []).map(mapPage);
+}
+
+export async function getAdminPageBySlug(
+  slug: string,
+): Promise<{ page: Page; sections: PageSection[] } | null> {
+  await requireAdmin();
+  const client = await createServerSupabaseClient();
+  const { data, error } = await client.from("pages").select("*").eq("slug", slug).maybeSingle();
+  if (error) throwDatabaseError("admin page", error);
+  if (!data) return null;
+
+  const page = mapPage(data);
+  const sections = await readPageSections(client, page.id, false);
+
+  return { page, sections };
+}
+
+export async function getAdminPageById(id: string): Promise<Page | null> {
+  await requireAdmin();
+  const { data, error } = await (
+    await createServerSupabaseClient()
+  )
+    .from("pages")
+    .select("*")
+    .eq("id", id)
+    .maybeSingle();
+  if (error) throwDatabaseError("admin page", error);
+
+  return data ? mapPage(data) : null;
 }
 
 export async function getAdminPageSections(pageId: string): Promise<PageSection[]> {

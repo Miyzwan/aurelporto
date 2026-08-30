@@ -197,12 +197,31 @@ describe("admin collection screens", () => {
     );
     expect(screen.getByText("No inquiries yet.")).toBeInTheDocument();
 
-    const detailView = render(<InquiryDetailScreen inquiry={inquiry} />);
+    const updateAction = vi.fn().mockResolvedValue({
+      ok: true,
+      data: {
+        ...inquiry,
+        status: "contacted",
+        adminNotes: "Call next week.",
+      },
+      message: "Inquiry updated.",
+    });
+
+    const detailView = render(
+      <InquiryDetailScreen inquiry={inquiry} updateAction={updateAction} />,
+    );
     await user.selectOptions(
       detailView.getByLabelText("Status", { selector: "#inquiry-detail-status" }),
       "contacted",
     );
     await user.type(screen.getByLabelText("Internal notes"), "Call next week.");
     expect(screen.getByRole("button", { name: "Save changes" })).toBeEnabled();
+    await user.click(screen.getByRole("button", { name: "Save changes" }));
+
+    expect(updateAction).toHaveBeenCalledWith({
+      id: inquiry.id,
+      status: "contacted",
+      adminNotes: "Call next week.",
+    });
   });
 });
