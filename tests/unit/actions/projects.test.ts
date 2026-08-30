@@ -31,6 +31,7 @@ import {
   updateProjectSection,
 } from "@/lib/actions/projects";
 import type { AdminProjectDetail, ProjectMutationInput } from "@/types/content";
+import type { ProjectSectionContent } from "@/types/project-sections";
 
 const PROJECT_ID = "00000000-0000-4000-8000-000000000001";
 const PROJECT_ID_2 = "00000000-0000-4000-8000-000000000002";
@@ -322,5 +323,44 @@ describe("projects actions", () => {
     const result = await createProject(sampleProjectInput);
 
     expect(result).toEqual({ ok: false, formError: "Could not create project." });
+  });
+
+  it("handles duplicate slug conflict gracefully", async () => {
+    const builder = query(null, { code: "23505", message: "unique constraint violation" });
+    mocks.createServerSupabaseClient.mockResolvedValue({
+      from: vi.fn().mockReturnValue(builder),
+    });
+
+    const result = await createProject(sampleProjectInput);
+
+    expect(result).toEqual({
+      ok: false,
+      fieldErrors: { slug: ["A project with this slug already exists."] },
+    });
+  });
+
+  it("rejects invalid project section JSON without database insertion", async () => {
+    const result = await createProjectSection({
+      projectId: PROJECT_ID,
+      sectionKey: "plan-seq",
+      sectionType: "plan_sequence",
+      content: {
+        intro: "Intro",
+        // Invalid item type
+        items: [
+          {
+            title: "Plan",
+            type: "unknown_type" as unknown as "layout",
+            mediaId: "not-a-uuid",
+            caption: "",
+          },
+        ],
+      } as unknown as ProjectSectionContent,
+      isEnabled: true,
+    });
+
+    expect(result.ok).toBe(false);
+    if (result.ok) throw new Error("Expected invalid plan sequence validation to fail");
+    expect(mocks.requireAdmin).not.toHaveBeenCalled();
   });
 });
