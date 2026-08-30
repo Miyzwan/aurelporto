@@ -111,6 +111,14 @@ export interface CreditsContent {
   items: CreditItem[];
 }
 
+export type ProjectSectionContent =
+  | NarrativeContent
+  | PlanSequenceContent
+  | MaterialPaletteContent
+  | BeforeAfterContent
+  | GalleryContent
+  | CreditsContent;
+
 /**
  * A section as the renderer receives it: the stored row plus the media assets
  * the repository layer already resolved from the ids in `content`.

@@ -35,6 +35,14 @@ test.describe("public site", () => {
     await expect(page.getByRole("article")).toHaveCount(2);
   });
 
+  test("signed-out admin access redirects to login", async ({ page }) => {
+    const response = await page.goto("/admin");
+
+    expect(response?.ok()).toBe(true);
+    await expect(page).toHaveURL(/\/auth\/login\?next=%2Fadmin/);
+    await expect(page.getByRole("heading", { name: "Sign in to continue." })).toBeVisible();
+  });
+
   test("skip link moves focus to the main landmark", async ({ page, isMobile }) => {
     // WebKit on a touch profile does not move focus to links on Tab by
     // default. The skip link is a desktop keyboard affordance, so assert it

@@ -6,6 +6,7 @@ import type { ReactNode } from "react";
 
 import { AdminHeader } from "@/components/admin/AdminHeader";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
+import { AdminToaster } from "@/components/admin/AdminToaster";
 
 export interface AdminProfile {
   displayName: string | null;
@@ -42,6 +43,7 @@ export function AdminShell({ children, logoutSlot = defaultLogoutSlot, profile }
 
   return (
     <div className="bg-canvas min-h-dvh">
+      <AdminToaster />
       <a
         href="#admin-main"
         className="bg-canvas type-meta focus:ring-focus sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[60] focus:px-5 focus:py-3"

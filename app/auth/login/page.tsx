@@ -2,6 +2,8 @@ import Link from "next/link";
 
 import { LoginForm } from "@/components/auth/LoginForm";
 
+import { loginAction } from "./actions";
+
 export default async function LoginPage({ searchParams }: PageProps<"/auth/login">) {
   const params = await searchParams;
   const nextPath = typeof params.next === "string" ? params.next : undefined;
@@ -54,7 +56,7 @@ export default async function LoginPage({ searchParams }: PageProps<"/auth/login
             </p>
 
             <div className="mt-10">
-              <LoginForm nextPath={nextPath} />
+              <LoginForm action={loginAction} nextPath={nextPath} />
             </div>
           </section>
         </div>

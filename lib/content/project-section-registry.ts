@@ -5,12 +5,151 @@ import type {
   MaterialPaletteContent,
   NarrativeContent,
   PlanSequenceContent,
+  ProjectSectionContent,
   ProjectSectionType,
 } from "@/types/project-sections";
 import { NARRATIVE_SECTION_TYPES, PROJECT_SECTION_TYPES } from "@/types/project-sections";
+import type { ZodType } from "zod";
+
+import {
+  beforeAfterSchema,
+  creditsSchema,
+  materialPaletteSchema,
+  narrativeSchema,
+  parseProjectSectionContent,
+  planSequenceSchema,
+  projectGallerySchema,
+  projectSectionContentSchemas,
+} from "@/lib/validation/project-sections";
 
 const PROJECT_SECTION_TYPE_SET = new Set<string>(PROJECT_SECTION_TYPES);
 const NARRATIVE_SECTION_TYPE_SET = new Set<string>(NARRATIVE_SECTION_TYPES);
+
+export interface ProjectSectionDefinition {
+  sectionType: ProjectSectionType;
+  schema: ZodType;
+  editorKey: string;
+  rendererKey: string;
+}
+
+export const PROJECT_SECTION_REGISTRY = {
+  overview: {
+    sectionType: "overview",
+    schema: narrativeSchema,
+    editorKey: "narrative",
+    rendererKey: "narrative",
+  },
+  brief: {
+    sectionType: "brief",
+    schema: narrativeSchema,
+    editorKey: "narrative",
+    rendererKey: "narrative",
+  },
+  existing_condition: {
+    sectionType: "existing_condition",
+    schema: narrativeSchema,
+    editorKey: "narrative",
+    rendererKey: "narrative",
+  },
+  challenge: {
+    sectionType: "challenge",
+    schema: narrativeSchema,
+    editorKey: "narrative",
+    rendererKey: "narrative",
+  },
+  concept: {
+    sectionType: "concept",
+    schema: narrativeSchema,
+    editorKey: "narrative",
+    rendererKey: "narrative",
+  },
+  plan_sequence: {
+    sectionType: "plan_sequence",
+    schema: planSequenceSchema,
+    editorKey: "plan-sequence",
+    rendererKey: "plan-sequence",
+  },
+  material_palette: {
+    sectionType: "material_palette",
+    schema: materialPaletteSchema,
+    editorKey: "material-palette",
+    rendererKey: "material-palette",
+  },
+  lighting_strategy: {
+    sectionType: "lighting_strategy",
+    schema: narrativeSchema,
+    editorKey: "narrative",
+    rendererKey: "narrative",
+  },
+  custom_furniture: {
+    sectionType: "custom_furniture",
+    schema: narrativeSchema,
+    editorKey: "narrative",
+    rendererKey: "narrative",
+  },
+  visualization: {
+    sectionType: "visualization",
+    schema: narrativeSchema,
+    editorKey: "narrative",
+    rendererKey: "narrative",
+  },
+  implementation: {
+    sectionType: "implementation",
+    schema: narrativeSchema,
+    editorKey: "narrative",
+    rendererKey: "narrative",
+  },
+  before_after: {
+    sectionType: "before_after",
+    schema: beforeAfterSchema,
+    editorKey: "before-after",
+    rendererKey: "before-after",
+  },
+  gallery: {
+    sectionType: "gallery",
+    schema: projectGallerySchema,
+    editorKey: "gallery",
+    rendererKey: "gallery",
+  },
+  outcome: {
+    sectionType: "outcome",
+    schema: narrativeSchema,
+    editorKey: "narrative",
+    rendererKey: "narrative",
+  },
+  credits: {
+    sectionType: "credits",
+    schema: creditsSchema,
+    editorKey: "credits",
+    rendererKey: "credits",
+  },
+  rich_text: {
+    sectionType: "rich_text",
+    schema: narrativeSchema,
+    editorKey: "narrative",
+    rendererKey: "narrative",
+  },
+} as const satisfies Record<ProjectSectionType, ProjectSectionDefinition>;
+
+export const projectSectionRegistry = PROJECT_SECTION_REGISTRY;
+
+export function getProjectSectionDefinition(
+  sectionType: string,
+): ProjectSectionDefinition | undefined {
+  return isProjectSectionType(sectionType) ? PROJECT_SECTION_REGISTRY[sectionType] : undefined;
+}
+
+export function parseRegisteredProjectSectionContent(
+  sectionType: string,
+  content: unknown,
+  recordId: string,
+): ProjectSectionContent | undefined {
+  return getProjectSectionDefinition(sectionType)
+    ? parseProjectSectionContent(sectionType, content, recordId)
+    : undefined;
+}
+
+export { projectSectionContentSchemas };
 
 export function isProjectSectionType(value: string): value is ProjectSectionType {
   return PROJECT_SECTION_TYPE_SET.has(value);

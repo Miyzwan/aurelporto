@@ -9,6 +9,22 @@
 
 export type ContentStatus = "draft" | "published" | "archived";
 
+export const PAGE_SECTION_TYPES = [
+  "home_hero",
+  "positioning",
+  "featured_projects",
+  "philosophy",
+  "services_preview",
+  "process_preview",
+  "material_moment",
+  "credibility",
+  "cta",
+  "rich_text",
+  "gallery",
+] as const;
+
+export type PageSectionType = (typeof PAGE_SECTION_TYPES)[number];
+
 export type NavigationPlacement = "header" | "footer" | "social";
 
 export interface NavigationItem {
@@ -92,6 +108,15 @@ export interface ProjectSummary {
   featured: boolean;
   featuredOrder: number;
   sortOrder: number;
+}
+
+export interface ProjectDetail extends ProjectSummary {
+  clientType: string | null;
+  designRole: string[];
+  services: string[];
+  seoTitle: string | null;
+  seoDescription: string | null;
+  ogMedia: MediaAsset | null;
 }
 
 export interface ServiceSummary {
@@ -223,6 +248,42 @@ export interface GalleryContent {
   mediaIds: string[];
 }
 
+export type PageSectionContent =
+  | HomeHeroContent
+  | PositioningContent
+  | FeaturedProjectsContent
+  | PhilosophyContent
+  | ServicesPreviewContent
+  | ProcessPreviewContent
+  | MaterialMomentContent
+  | CredibilityContent
+  | CtaContent
+  | RichTextContent
+  | GalleryContent;
+
+export interface Page {
+  id: string;
+  slug: string;
+  title: string;
+  navLabel: string | null;
+  seoTitle: string | null;
+  seoDescription: string | null;
+  ogMediaId: string | null;
+  status: ContentStatus;
+}
+
+export interface PageSection {
+  id: string;
+  pageId: string;
+  sectionKey: string;
+  sectionType: PageSectionType;
+  content: PageSectionContent;
+  settings: Record<string, unknown>;
+  sortOrder: number;
+  isEnabled: boolean;
+  status: ContentStatus;
+}
+
 /**
  * Mirrors `site_settings.inquiry_config`. Every option list is CMS-owned so the
  * contact form can be re-scoped without a deploy.
@@ -266,4 +327,24 @@ export interface ExperienceEntry {
   organisation: string | null;
   year: string;
   description: string;
+}
+
+export interface InquiryRecord {
+  id: string;
+  name: string;
+  email: string;
+  phone: string | null;
+  projectType: string;
+  projectLocation: string;
+  areaSqm: number | null;
+  requiredService: string;
+  projectStatus: string;
+  desiredTimeline: string;
+  budgetRange: string | null;
+  projectBrief: string;
+  referralSource: string | null;
+  status: "new" | "contacted" | "qualified" | "won" | "lost" | "spam";
+  adminNotes: string | null;
+  submittedAt: string;
+  updatedAt: string;
 }
