@@ -138,6 +138,8 @@ export interface ProjectSummary {
   sortOrder: number;
 }
 
+import type { ProjectSectionContent, ProjectSectionType } from "./project-sections";
+
 export interface ProjectDetail extends ProjectSummary {
   clientType: string | null;
   designRole: string[];
@@ -145,6 +147,12 @@ export interface ProjectDetail extends ProjectSummary {
   seoTitle: string | null;
   seoDescription: string | null;
   ogMedia: MediaAsset | null;
+}
+
+export interface AdminProjectDetail extends ProjectDetail {
+  status: ContentStatus;
+  heroMediaId: string | null;
+  ogMediaId: string | null;
 }
 
 export interface ServiceSummary {
@@ -523,4 +531,38 @@ export interface PageSectionMutationInput {
   sortOrder?: number;
   isEnabled: boolean;
   status: ContentStatus;
+}
+
+export interface ProjectMutationInput {
+  id?: string;
+  slug: string;
+  title: string;
+  year: number;
+  location: string;
+  projectType: string;
+  areaSqm: number | null;
+  projectStatus: ProjectStatus;
+  clientType: string | null;
+  designRole: string[];
+  services: string[];
+  summary: string;
+  heroMediaId: string | null;
+  featured: boolean;
+  featuredOrder: number;
+  sortOrder: number;
+  seoTitle: string | null;
+  seoDescription: string | null;
+  ogMediaId: string | null;
+  status: ContentStatus;
+}
+
+export interface ProjectSectionMutationInput {
+  id?: string;
+  projectId: string;
+  sectionKey: string;
+  sectionType: ProjectSectionType;
+  title?: string | null;
+  content: ProjectSectionContent;
+  sortOrder?: number;
+  isEnabled: boolean;
 }

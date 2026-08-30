@@ -4,7 +4,13 @@ import { requireAdmin } from "@/lib/auth/require-admin";
 import { getMediaAssetsByIds } from "@/lib/data/media";
 import { createPublicSupabaseClient } from "@/lib/supabase/public";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
-import type { MediaAsset, ProjectDetail, ProjectStatus, ProjectSummary } from "@/types/content";
+import type {
+  AdminProjectDetail,
+  MediaAsset,
+  ProjectDetail,
+  ProjectStatus,
+  ProjectSummary,
+} from "@/types/content";
 import type { Tables, Database } from "@/types/database.generated";
 import type { ProjectSection, ProjectSectionContent } from "@/types/project-sections";
 import { parseProjectSectionContent } from "@/lib/validation/project-sections";
@@ -35,7 +41,7 @@ function indexMedia(assets: MediaAsset[]): Record<string, MediaAsset> {
   return Object.fromEntries(assets.map((asset) => [asset.id, asset]));
 }
 
-function mapProjectSummary(
+export function mapProjectSummary(
   row: Tables<"projects">,
   media: Record<string, MediaAsset>,
 ): ProjectSummary {
@@ -58,7 +64,7 @@ function mapProjectSummary(
   };
 }
 
-function mapProjectDetail(
+export function mapProjectDetail(
   row: Tables<"projects">,
   media: Record<string, MediaAsset>,
 ): ProjectDetail {
@@ -72,6 +78,20 @@ function mapProjectDetail(
     seoTitle: project.seo_title,
     seoDescription: project.seo_description,
     ogMedia: mediaFor(project.og_media_id, media),
+  };
+}
+
+export function mapAdminProjectDetail(
+  row: Tables<"projects">,
+  media: Record<string, MediaAsset>,
+): AdminProjectDetail {
+  const project = mapProjectRow(row);
+
+  return {
+    ...mapProjectDetail(project, media),
+    status: project.status,
+    heroMediaId: project.hero_media_id,
+    ogMediaId: project.og_media_id,
   };
 }
 
@@ -161,16 +181,16 @@ export async function getNextPublishedProject(projectId: string): Promise<Projec
   return projects[(currentIndex + 1) % projects.length] ?? null;
 }
 
-export async function getAdminProjects(): Promise<ProjectDetail[]> {
+export async function getAdminProjects(): Promise<AdminProjectDetail[]> {
   await requireAdmin();
   const supabase = await createServerSupabaseClient();
   const rows = await readProjectRows(supabase, {}, false);
   const media = await readProjectMedia(supabase, rows);
 
-  return rows.map((row) => mapProjectDetail(row, media));
+  return rows.map((row) => mapAdminProjectDetail(row, media));
 }
 
-export async function getAdminProjectById(projectId: string): Promise<ProjectDetail | null> {
+export async function getAdminProjectById(projectId: string): Promise<AdminProjectDetail | null> {
   await requireAdmin();
   const supabase = await createServerSupabaseClient();
   const { data, error } = await supabase
@@ -182,7 +202,22 @@ export async function getAdminProjectById(projectId: string): Promise<ProjectDet
   if (!data) return null;
 
   const media = await readProjectMedia(supabase, [data]);
-  return mapProjectDetail(data, media);
+  return mapAdminProjectDetail(data, media);
+}
+
+export async function getAdminProjectBySlug(slug: string): Promise<AdminProjectDetail | null> {
+  await requireAdmin();
+  const supabase = await createServerSupabaseClient();
+  const { data, error } = await supabase
+    .from("projects")
+    .select("*")
+    .eq("slug", slug)
+    .maybeSingle();
+  if (error) throwDatabaseError("admin project", error);
+  if (!data) return null;
+
+  const media = await readProjectMedia(supabase, [data]);
+  return mapAdminProjectDetail(data, media);
 }
 
 function sectionMediaIds(content: ProjectSectionContent): string[] {
