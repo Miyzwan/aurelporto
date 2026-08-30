@@ -1,3 +1,4 @@
+import { PortfolioAnalytics } from "@/components/analytics/PortfolioAnalytics";
 import { ReducedMotionProvider, SmoothScrollProvider } from "@/components/motion";
 import { Footer } from "@/components/public/Footer";
 import { Header } from "@/components/public/Header";
@@ -36,6 +37,8 @@ export default async function PublicLayout({ children }: LayoutProps<"/">) {
             navigation={footerNavigation}
             socialNavigation={socialNavigation}
           />
+
+          <PortfolioAnalytics />
         </>
       </SmoothScrollProvider>
     </ReducedMotionProvider>

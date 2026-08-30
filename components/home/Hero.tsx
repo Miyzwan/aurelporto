@@ -1,7 +1,10 @@
+"use client";
+
 import Link from "next/link";
 
 import { HeroSpaceReveal, MaskReveal } from "@/components/motion";
 import { Media } from "@/components/public/Media";
+import { trackPortfolioEvent } from "@/lib/analytics/tracker";
 import type { HomeHeroContent, MediaAsset, ProjectSummary } from "@/types/content";
 
 interface HeroProps {
@@ -19,6 +22,22 @@ export function Hero({ content, heroMedia, signatureProject }: HeroProps) {
   const eyebrow = content.eyebrow.trim();
   const subheadline = content.subheadline.trim();
   const location = content.location.trim();
+
+  function handlePrimaryCtaClick() {
+    if (content.primaryCtaHref.includes("project")) {
+      trackPortfolioEvent("hero_view_projects_click", { placement: "hero_primary" });
+    } else {
+      trackPortfolioEvent("hero_start_project_click", { placement: "hero_primary" });
+    }
+  }
+
+  function handleSecondaryCtaClick() {
+    if (content.secondaryCtaHref?.includes("contact")) {
+      trackPortfolioEvent("hero_start_project_click", { placement: "hero_secondary" });
+    } else {
+      trackPortfolioEvent("hero_view_projects_click", { placement: "hero_secondary" });
+    }
+  }
 
   return (
     <section className="container-editorial pt-(--spacing-section-tight) pb-(--spacing-section)">
@@ -39,6 +58,7 @@ export function Hero({ content, heroMedia, signatureProject }: HeroProps) {
           <div className="flex flex-wrap gap-3">
             <Link
               href={content.primaryCtaHref}
+              onClick={handlePrimaryCtaClick}
               className="border-line-strong type-meta hover:bg-ink hover:text-warm-white inline-flex items-center border px-6 py-3 transition-colors duration-(--duration-quick)"
             >
               {content.primaryCtaLabel}
@@ -46,6 +66,7 @@ export function Hero({ content, heroMedia, signatureProject }: HeroProps) {
             {content.secondaryCtaLabel ? (
               <Link
                 href={content.secondaryCtaHref}
+                onClick={handleSecondaryCtaClick}
                 className="type-meta hover:text-foreground-muted inline-flex items-center px-2 py-3 underline underline-offset-8 transition-colors duration-(--duration-quick)"
               >
                 {content.secondaryCtaLabel}
@@ -76,6 +97,13 @@ export function Hero({ content, heroMedia, signatureProject }: HeroProps) {
           <p className="type-spec">
             <Link
               href={`/projects/${signatureProject.slug}`}
+              onClick={() =>
+                trackPortfolioEvent("featured_project_click", {
+                  project_slug: signatureProject.slug,
+                  project_type: signatureProject.projectType,
+                  sort_order: 0,
+                })
+              }
               className="underline-offset-4 hover:underline"
             >
               {signatureProject.title}

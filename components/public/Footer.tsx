@@ -1,5 +1,8 @@
+"use client";
+
 import Link from "next/link";
 
+import { trackPortfolioEvent } from "@/lib/analytics/tracker";
 import type { NavigationItem, SiteSettings } from "@/types/content";
 
 interface FooterProps {
@@ -27,13 +30,16 @@ export function Footer({ siteSettings, navigation, socialNavigation = [] }: Foot
           placement: "social" as const,
           sortOrder: index,
           isVisible: true,
-          // The legacy site_settings JSON shape contains only label and href;
-          // social links are external by definition until navigation items
-          // provide an explicit target_blank value.
           targetBlank: true,
         }));
   const hasContact = Boolean(siteSettings.email ?? siteSettings.phone ?? siteSettings.whatsapp);
   const hasSocial = socialItems.length > 0;
+
+  function handleSocialClick(label: string, href: string) {
+    if (label.toLowerCase().includes("instagram") || href.toLowerCase().includes("instagram")) {
+      trackPortfolioEvent("instagram_click", { placement: "footer" });
+    }
+  }
 
   return (
     <footer className="border-line mt-(--spacing-section) border-t">
@@ -78,14 +84,21 @@ export function Footer({ siteSettings, navigation, socialNavigation = [] }: Foot
               <ul className="mt-4 flex flex-col gap-2">
                 {siteSettings.email ? (
                   <li>
-                    <a href={`mailto:${siteSettings.email}`} className="type-spec break-all">
+                    <a
+                      href={`mailto:${siteSettings.email}`}
+                      onClick={() => trackPortfolioEvent("email_click", { placement: "footer" })}
+                      className="type-spec break-all"
+                    >
                       {siteSettings.email}
                     </a>
                   </li>
                 ) : null}
                 {siteSettings.phone ? (
                   <li>
-                    <a href={`tel:${siteSettings.phone.replace(/\s+/g, "")}`} className="type-spec">
+                    <a
+                      href={`tel:${siteSettings.phone.replace(/\s+/g, "")}`}
+                      className="type-spec"
+                    >
                       {siteSettings.phone}
                     </a>
                   </li>
@@ -94,6 +107,7 @@ export function Footer({ siteSettings, navigation, socialNavigation = [] }: Foot
                   <li>
                     <a
                       href={`https://wa.me/${siteSettings.whatsapp.replace(/\D/g, "")}`}
+                      onClick={() => trackPortfolioEvent("whatsapp_click", { placement: "footer" })}
                       target="_blank"
                       rel="noreferrer noopener"
                       className="type-spec"
@@ -114,6 +128,7 @@ export function Footer({ siteSettings, navigation, socialNavigation = [] }: Foot
                   <li key={link.id}>
                     <a
                       href={link.href}
+                      onClick={() => handleSocialClick(link.label, link.href)}
                       target={link.targetBlank ? "_blank" : undefined}
                       rel={link.targetBlank ? "noreferrer noopener" : undefined}
                       className="type-spec"

@@ -1,5 +1,8 @@
+"use client";
+
 import Link from "next/link";
 
+import { trackPortfolioEvent } from "@/lib/analytics/tracker";
 import { cn } from "@/lib/utils/cn";
 
 export interface ProjectFilterOption {
@@ -39,6 +42,11 @@ export function ProjectFilter({ options, active, basePath = "/projects" }: Proje
                 href={href}
                 scroll={false}
                 aria-current={isActive ? "true" : undefined}
+                onClick={() =>
+                  trackPortfolioEvent("project_filter_used", {
+                    category: option.value ?? "all",
+                  })
+                }
                 className={cn(
                   "type-meta inline-flex items-baseline gap-1.5 px-2 py-3 transition-colors duration-(--duration-quick)",
                   isActive

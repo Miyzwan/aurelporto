@@ -1,7 +1,10 @@
+"use client";
+
 import Link from "next/link";
 
 import { ImageReveal } from "@/components/motion";
 import { ImageMedia } from "@/components/public/ImageMedia";
+import { trackPortfolioEvent } from "@/lib/analytics/tracker";
 import { cn } from "@/lib/utils/cn";
 import type { ProjectSummary } from "@/types/content";
 
@@ -52,7 +55,17 @@ export function ProjectCard({
 
   return (
     <article className={cn("group", className)}>
-      <Link href={`/projects/${project.slug}`} className="block">
+      <Link
+        href={`/projects/${project.slug}`}
+        onClick={() =>
+          trackPortfolioEvent("featured_project_click", {
+            project_slug: project.slug,
+            project_type: project.projectType,
+            sort_order: index,
+          })
+        }
+        className="block"
+      >
         <div className="bg-surface-sunken overflow-hidden">
           {imageReveal && project.heroMedia ? (
             <ImageReveal contentClassName="block">{media}</ImageReveal>

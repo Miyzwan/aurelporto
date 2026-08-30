@@ -1,4 +1,7 @@
+"use client";
+
 import { Media } from "@/components/public/Media";
+import { trackPortfolioEvent } from "@/lib/analytics/tracker";
 import type { ServiceDetail } from "@/types/content";
 
 interface ServiceListProps {
@@ -36,6 +39,12 @@ export function ServiceList({ services }: ServiceListProps) {
         <article
           key={service.id}
           id={service.slug}
+          onClick={() =>
+            trackPortfolioEvent("service_view", {
+              service_slug: service.slug,
+              service_name: service.name,
+            })
+          }
           className="border-line grid-editorial scroll-mt-24 border-b py-12"
         >
           <div className="desktop:col-span-4 col-span-12">

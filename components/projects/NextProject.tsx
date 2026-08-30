@@ -1,7 +1,10 @@
+"use client";
+
 import Link from "next/link";
 
 import { FullWidthPreview } from "@/components/motion";
 import { ImageMedia } from "@/components/public/ImageMedia";
+import { trackPortfolioEvent } from "@/lib/analytics/tracker";
 import type { ProjectSummary } from "@/types/content";
 
 interface NextProjectProps {
@@ -14,7 +17,15 @@ export function NextProject({ project }: NextProjectProps) {
   return (
     <section className="border-line container-editorial border-t py-(--spacing-section-tight)">
       <p className="type-meta text-foreground-subtle">Next project</p>
-      <Link href={`/projects/${project.slug}`} className="group mt-6 block">
+      <Link
+        href={`/projects/${project.slug}`}
+        onClick={() =>
+          trackPortfolioEvent("project_next_click", {
+            next_project_slug: project.slug,
+          })
+        }
+        className="group mt-6 block"
+      >
         <div className="grid-editorial items-end">
           <h2 className="type-heading desktop:col-span-8 col-span-12">{project.title}</h2>
           <span className="type-meta text-foreground-subtle desktop:col-span-4 desktop:mt-0 col-span-12 mt-4">

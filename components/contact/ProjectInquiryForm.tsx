@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import type { FormEvent, ReactNode } from "react";
 
 import type { ActionResult } from "@/components/admin/action-result";
+import { trackPortfolioEvent } from "@/lib/analytics/tracker";
 import type { PublicInquiryInput } from "@/lib/validation/inquiries";
 import type { InquiryConfig, ServiceSummary } from "@/types/content";
 
@@ -61,6 +62,14 @@ export function ProjectInquiryForm({ config, services, submitAction }: ProjectIn
   const [formError, setFormError] = useState<string | null>(null);
   const [isPending, setIsPending] = useState(false);
   const [success, setSuccess] = useState<{ title: string; body: string } | null>(null);
+  const hasTrackedStartRef = useRef(false);
+
+  function handleFormFocus() {
+    if (!hasTrackedStartRef.current) {
+      hasTrackedStartRef.current = true;
+      trackPortfolioEvent("contact_start", { source: "inquiry_form" });
+    }
+  }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -97,10 +106,18 @@ export function ProjectInquiryForm({ config, services, submitAction }: ProjectIn
       const result = await submitAction(input);
 
       if (result.ok) {
+        // Privacy-safe tracking: NEVER include name, email, phone, budget, or brief
+        trackPortfolioEvent("contact_submit", {
+          project_type: input.projectType,
+          required_service: input.requiredService,
+          timeline: input.desiredTimeline,
+        });
+
         setSuccess({
           title: result.data?.successTitle ?? config.successTitle,
           body: result.data?.successBody ?? config.successBody,
         });
+        hasTrackedStartRef.current = false;
         form.reset();
       } else {
         if (result.fieldErrors) {
@@ -140,7 +157,12 @@ export function ProjectInquiryForm({ config, services, submitAction }: ProjectIn
   }
 
   return (
-    <form className="grid-editorial gap-y-8" noValidate onSubmit={handleSubmit}>
+    <form
+      className="grid-editorial gap-y-8"
+      noValidate
+      onFocus={handleFormFocus}
+      onSubmit={handleSubmit}
+    >
       {formError ? (
         <div
           role="alert"
