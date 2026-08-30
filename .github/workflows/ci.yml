@@ -17,6 +17,11 @@ jobs:
   quality:
     name: Lint, typecheck, test, and build
     runs-on: ubuntu-latest
+    env:
+      # The quality gate does not access Supabase. These non-secret values are
+      # only required because next.config.ts validates the image host at load time.
+      NEXT_PUBLIC_SUPABASE_URL: https://ci-placeholder.supabase.co
+      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ci-placeholder-publishable-key
 
     steps:
       - name: Check out repository
