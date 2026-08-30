@@ -1,4 +1,5 @@
 export { HeroSpaceReveal } from "./HeroSpaceReveal";
+export { FullWidthPreview } from "./FullWidthPreview";
 export { ImageReveal } from "./ImageReveal";
 export { MaskReveal } from "./MaskReveal";
 export { ParallaxMedia } from "./ParallaxMedia";

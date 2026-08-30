@@ -4,7 +4,12 @@ import { requireAdmin } from "@/lib/auth/require-admin";
 import { getMediaAssetsByIds, indexMediaAssets } from "@/lib/data/media";
 import { createPublicSupabaseClient } from "@/lib/supabase/public";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
-import type { MediaAsset, ServiceDetail, ServiceSummary } from "@/types/content";
+import type {
+  AdminServiceDetail,
+  MediaAsset,
+  ServiceDetail,
+  ServiceSummary,
+} from "@/types/content";
 import type { Database, Tables } from "@/types/database.generated";
 import { serviceRowSchema } from "@/lib/validation/services";
 
@@ -30,10 +35,10 @@ function mapServiceSummary(
   };
 }
 
-function mapServiceDetail(
+export function mapServiceDetail(
   row: Tables<"services">,
   media: Record<string, MediaAsset>,
-): ServiceDetail {
+): AdminServiceDetail {
   const service = mapServiceRow(row);
 
   return {
@@ -45,13 +50,15 @@ function mapServiceDetail(
     included: service.included,
     excluded: service.excluded,
     typicalProjectTypes: service.typical_project_types,
+    featured: service.featured,
+    status: service.status,
   };
 }
 
 async function readServices(
   supabase: SupabaseClient<Database>,
   publishedOnly: boolean,
-): Promise<ServiceDetail[]> {
+): Promise<AdminServiceDetail[]> {
   let query = supabase.from("services").select("*").order("sort_order").order("id");
   if (publishedOnly) query = query.eq("status", "published");
 
@@ -85,7 +92,7 @@ export async function getPublishedServiceDetails(): Promise<ServiceDetail[]> {
   return readServices(createPublicSupabaseClient(), true);
 }
 
-export async function getAdminServices(): Promise<ServiceDetail[]> {
+export async function getAdminServices(): Promise<AdminServiceDetail[]> {
   await requireAdmin();
   return readServices(await createServerSupabaseClient(), false);
 }

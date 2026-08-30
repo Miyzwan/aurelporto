@@ -1,10 +1,11 @@
 import { createBrowserClient } from "@supabase/ssr";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 import type { Database } from "@/types/database.generated";
 
 import { supabasePublishableKey, supabaseUrl } from "./env";
 
-const browserClient = createBrowserClient<Database>(supabaseUrl(), supabasePublishableKey());
+let browserClient: SupabaseClient<Database> | undefined;
 
 /**
  * Returns the singleton browser client used by client components and browser
@@ -12,6 +13,7 @@ const browserClient = createBrowserClient<Database>(supabaseUrl(), supabasePubli
  * server client.
  */
 export function createBrowserSupabaseClient() {
+  browserClient ??= createBrowserClient<Database>(supabaseUrl(), supabasePublishableKey());
   return browserClient;
 }
 

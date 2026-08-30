@@ -88,6 +88,33 @@ export interface MediaAsset {
   mimeType: string;
 }
 
+/** Admin-only extensions kept separate from the public presentation model. */
+export interface AdminMediaAsset extends MediaAsset {
+  isArchived: boolean;
+  fileSizeBytes: number | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface MediaUploadInput {
+  bucket: "portfolio-public";
+  storagePath: string;
+  mediaType: MediaType;
+  altText: string;
+  caption: string | null;
+  photographer: string | null;
+  width: number | null;
+  height: number | null;
+  posterPath: string | null;
+  mimeType: string;
+  fileSizeBytes: number;
+}
+
+export interface MediaArchiveInput {
+  id: string;
+  isArchived: boolean;
+}
+
 /* -------------------------------------------------------------------------
    Collection view models
 ------------------------------------------------------------------------- */
@@ -138,6 +165,10 @@ export interface ProcessStep {
   sortOrder: number;
 }
 
+export interface AdminProcessStep extends ProcessStep {
+  status: ContentStatus;
+}
+
 export interface Testimonial {
   id: string;
   clientName: string;
@@ -145,6 +176,11 @@ export interface Testimonial {
   projectName: string | null;
   quote: string;
   sortOrder: number;
+}
+
+export interface AdminTestimonial extends Testimonial {
+  featured: boolean;
+  status: ContentStatus;
 }
 
 export interface ExplorationSummary {
@@ -156,6 +192,89 @@ export interface ExplorationSummary {
   year: number | null;
   coverMedia: MediaAsset | null;
   sortOrder: number;
+}
+
+export interface AdminServiceDetail extends ServiceDetail {
+  featured: boolean;
+  status: ContentStatus;
+}
+
+export interface AdminExplorationSummary extends ExplorationSummary {
+  status: ContentStatus;
+}
+
+export interface ExplorationMediaItem {
+  id: string;
+  explorationId: string;
+  mediaId: string;
+  caption: string | null;
+  sortOrder: number;
+  media: MediaAsset | null;
+}
+
+/** Inputs shared by the admin collection Server Actions and their editors. */
+export interface ServiceMutationInput {
+  id?: string;
+  slug: string;
+  name: string;
+  shortDescription: string;
+  fullDescription: string;
+  idealClient: string;
+  scope: string[];
+  deliverables: string[];
+  included: string[];
+  excluded: string[];
+  typicalProjectTypes: string[];
+  mediaId: string | null;
+  sortOrder: number;
+  featured: boolean;
+  status: ContentStatus;
+}
+
+export interface ProcessStepMutationInput {
+  id?: string;
+  stepNo: number;
+  title: string;
+  description: string;
+  mediaId: string | null;
+  sortOrder: number;
+  status: ContentStatus;
+}
+
+export interface ExplorationMediaMutationInput {
+  id?: string;
+  explorationId: string;
+  mediaId: string;
+  caption: string;
+  sortOrder: number;
+}
+
+export interface ExplorationMutationInput {
+  id?: string;
+  slug: string;
+  title: string;
+  category: string;
+  description: string;
+  year: number | null;
+  coverMediaId: string | null;
+  sortOrder: number;
+  status: ContentStatus;
+}
+
+export interface ExplorationMediaSyncInput {
+  explorationId: string;
+  items: ExplorationMediaMutationInput[];
+}
+
+export interface TestimonialMutationInput {
+  id?: string;
+  clientName: string;
+  clientRole: string;
+  projectName: string;
+  quote: string;
+  sortOrder: number;
+  featured: boolean;
+  status: ContentStatus;
 }
 
 /* -------------------------------------------------------------------------

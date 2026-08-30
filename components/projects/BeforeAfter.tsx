@@ -1,6 +1,7 @@
 "use client";
 
-import { useId, useState } from "react";
+import { motion, useMotionValue, useMotionValueEvent, useTransform } from "motion/react";
+import { useId, useRef, useState, type KeyboardEvent } from "react";
 
 import { Media } from "@/components/public/Media";
 import type { MediaAsset } from "@/types/content";
@@ -27,23 +28,101 @@ function BeforeAfterPairView({
   pair: BeforeAfterPair;
   media: Record<string, MediaAsset>;
 }) {
-  const [showing, setShowing] = useState<"before" | "after">("after");
+  const [showing, setShowing] = useState<"before" | "after" | null>("after");
   const regionId = useId();
+  const sliderRef = useRef<HTMLInputElement>(null);
+  const position = useMotionValue(100);
+  const afterClipPath = useTransform(position, (value) => {
+    const clamped = Math.min(Math.max(value, 0), 100);
+    return `inset(0 0 0 ${100 - clamped}%)`;
+  });
+  const handlePosition = useTransform(position, (value) => `${Math.min(Math.max(value, 0), 100)}%`);
 
   const before = media[pair.beforeMediaId];
   const after = media[pair.afterMediaId];
+  useMotionValueEvent(position, "change", (value) => {
+    const nextShowing = value <= 0 ? "before" : value >= 100 ? "after" : null;
+    setShowing((current) => (current === nextShowing ? current : nextShowing));
+  });
+
   if (!before || !after) return null;
 
-  const asset = showing === "before" ? before : after;
+  const setPosition = (value: number) => {
+    position.set(value);
+    if (sliderRef.current) sliderRef.current.value = String(value);
+  };
+
+  const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+    const current = Number(event.currentTarget.value);
+    const next =
+      event.key === "ArrowRight" || event.key === "ArrowUp"
+        ? Math.min(current + 1, 100)
+        : event.key === "ArrowLeft" || event.key === "ArrowDown"
+          ? Math.max(current - 1, 0)
+          : event.key === "Home"
+            ? 0
+            : event.key === "End"
+              ? 100
+              : null;
+
+    if (next === null || next === current) return;
+
+    event.preventDefault();
+    setPosition(next);
+  };
 
   return (
     <figure>
-      <div id={regionId} aria-live="polite">
-        <Media
-          asset={asset}
-          aspectRatio={3 / 2}
-          sizes="(min-width: 768px) 100vw, 100vw"
-          showCaption={false}
+      <div
+        id={regionId}
+        className="focus-within:outline-focus relative focus-within:outline-2 focus-within:outline-offset-2"
+        aria-label="Before and after image comparison"
+        data-before-after-frame
+      >
+        <div aria-hidden="true">
+          <Media
+            asset={before}
+            aspectRatio={3 / 2}
+            sizes="(min-width: 768px) 100vw, 100vw"
+            showCaption={false}
+          />
+        </div>
+
+        <motion.div
+          className="pointer-events-none absolute inset-0 overflow-hidden"
+          style={{ clipPath: afterClipPath }}
+          aria-hidden="true"
+        >
+          <Media
+            asset={after}
+            aspectRatio={3 / 2}
+            sizes="(min-width: 768px) 100vw, 100vw"
+            showCaption={false}
+          />
+        </motion.div>
+
+        <motion.div
+          className="bg-warm-white/90 pointer-events-none absolute inset-y-0 z-10 w-px"
+          style={{ left: handlePosition }}
+          aria-hidden="true"
+        />
+
+        <input
+          ref={sliderRef}
+          type="range"
+          min="0"
+          max="100"
+          step="1"
+          defaultValue="100"
+          aria-label="Adjust before and after comparison"
+          aria-valuetext={
+            showing === "before" ? "Before" : showing === "after" ? "After" : "Partial comparison"
+          }
+          aria-controls={regionId}
+          data-before-after-input
+          onKeyDown={handleKeyDown}
+          onChange={(event) => position.set(Number(event.currentTarget.value))}
+          className="absolute inset-0 z-20 h-full w-full cursor-ew-resize [touch-action:pan-y] opacity-0"
         />
       </div>
 
@@ -56,7 +135,7 @@ function BeforeAfterPairView({
               type="button"
               aria-pressed={showing === state}
               aria-controls={regionId}
-              onClick={() => setShowing(state)}
+              onClick={() => setPosition(state === "before" ? 0 : 100)}
               className={
                 showing === state
                   ? "type-meta px-2 py-2 underline underline-offset-8"
@@ -67,6 +146,11 @@ function BeforeAfterPairView({
             </button>
           ))}
         </div>
+        <span className="sr-only" aria-live="polite">
+          Showing{" "}
+          {showing === "before" ? "before" : showing === "after" ? "after" : "partial comparison"}{" "}
+          view.
+        </span>
       </figcaption>
     </figure>
   );

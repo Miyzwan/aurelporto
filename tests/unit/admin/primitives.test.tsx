@@ -14,6 +14,7 @@ import {
   TextArea,
   TextInput,
 } from "@/components/admin";
+import type { AdminMediaAsset } from "@/types/content";
 
 const toast = vi.hoisted(() => ({
   error: vi.fn(),
@@ -116,6 +117,34 @@ describe("admin form primitives", () => {
       "No media selected yet.",
     );
     expect(screen.getByText("Media library pending")).toBeInTheDocument();
+  });
+
+  it("opens the active media library and reports a selected asset", async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    const asset: AdminMediaAsset = {
+      id: "00000000-0000-4000-8000-000000000001",
+      bucket: "portfolio-public",
+      storagePath: "/fixtures/studio.jpg",
+      mediaType: "image",
+      altText: "Studio detail",
+      caption: null,
+      photographer: null,
+      width: 1200,
+      height: 800,
+      posterPath: null,
+      mimeType: "image/jpeg",
+      isArchived: false,
+      fileSizeBytes: 1200,
+      createdAt: "2026-08-30T10:00:00.000Z",
+      updatedAt: "2026-08-30T10:00:00.000Z",
+    };
+
+    render(<MediaPicker id="hero-media" value={null} assets={[asset]} onChange={onChange} />);
+    await user.click(screen.getByRole("button", { name: "Choose media" }));
+    await user.click(screen.getByRole("button", { name: /Studio detail/ }));
+
+    expect(onChange).toHaveBeenCalledWith(asset.id);
   });
 });
 

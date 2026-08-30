@@ -1,3 +1,4 @@
+import { ImageReveal } from "@/components/motion";
 import { Media } from "@/components/public/Media";
 import type { MediaAsset } from "@/types/content";
 
@@ -18,13 +19,18 @@ export function EditorialGallery({ media }: EditorialGalleryProps) {
       {media.map((asset, index) => {
         const isWide = index % 3 === 0;
         return (
-          <Media
+          <ImageReveal
             key={asset.id}
-            asset={asset}
-            aspectRatio={isWide ? 16 / 9 : 4 / 5}
-            sizes={isWide ? "100vw" : "(min-width: 768px) 50vw, 100vw"}
             className={isWide ? "col-span-12" : "tablet:col-span-6 col-span-12"}
-          />
+            contentClassName="block"
+            delay={Math.min(index * 0.06, 0.24)}
+          >
+            <Media
+              asset={asset}
+              aspectRatio={isWide ? 16 / 9 : 4 / 5}
+              sizes={isWide ? "100vw" : "(min-width: 768px) 50vw, 100vw"}
+            />
+          </ImageReveal>
         );
       })}
     </div>
