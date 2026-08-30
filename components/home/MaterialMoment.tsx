@@ -1,3 +1,4 @@
+import { VelocityStrip } from "@/components/motion";
 import { Media } from "@/components/public/Media";
 import { Section } from "@/components/public/Section";
 import type { MaterialMomentContent, MediaAsset } from "@/types/content";
@@ -22,21 +23,27 @@ export function MaterialMoment({ content, media }: MaterialMomentProps) {
         <p className="type-body text-foreground-muted container-reading mb-12">{intro}</p>
       ) : null}
 
-      <div className="grid-editorial">
+      <VelocityStrip
+        className="overflow-visible md:overflow-hidden"
+        contentClassName="grid w-full grid-cols-2 gap-x-(--spacing-gutter) gap-y-(--spacing-gutter) md:flex md:w-max"
+      >
         {media.map((asset, index) => (
-          <Media
+          <div
             key={asset.id}
-            asset={asset}
-            aspectRatio={1}
-            sizes="(min-width: 1280px) 30vw, (min-width: 768px) 45vw, 90vw"
             className={
               index === 0
-                ? "tablet:col-span-6 desktop:col-span-4 col-span-12"
-                : "tablet:col-span-6 desktop:col-span-4 col-span-6"
+                ? "col-span-2 md:w-[38vw] md:shrink-0"
+                : "col-span-1 md:w-[24vw] md:shrink-0"
             }
-          />
+          >
+            <Media
+              asset={asset}
+              aspectRatio={1}
+              sizes="(min-width: 1280px) 38vw, (min-width: 768px) 38vw, 50vw"
+            />
+          </div>
         ))}
-      </div>
+      </VelocityStrip>
     </Section>
   );
 }

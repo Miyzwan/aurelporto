@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { HeroSpaceReveal, MaskReveal } from "@/components/motion";
 import { Media } from "@/components/public/Media";
 import type { HomeHeroContent, MediaAsset, ProjectSummary } from "@/types/content";
 
@@ -11,9 +12,8 @@ interface HeroProps {
 
 /**
  * Answers "who, what kind of work, and what is the signature project" inside
- * one viewport (PRD section 16). No entrance animation yet — FE-010 layers the
- * masked reveal on top of markup that must already be complete and readable
- * with JavaScript disabled.
+ * one viewport (PRD section 16). Motion is layered on top of markup that must
+ * already be complete and readable with JavaScript disabled.
  */
 export function Hero({ content, heroMedia, signatureProject }: HeroProps) {
   const eyebrow = content.eyebrow.trim();
@@ -25,7 +25,11 @@ export function Hero({ content, heroMedia, signatureProject }: HeroProps) {
       <div className="grid-editorial">
         <div className="desktop:col-span-9 col-span-12">
           {eyebrow ? <p className="type-meta text-foreground-subtle">{eyebrow}</p> : null}
-          <h1 className="type-statement mt-6">{content.headline}</h1>
+          <h1 className="type-statement mt-6">
+            <MaskReveal as="span" contentClassName="block">
+              {content.headline}
+            </MaskReveal>
+          </h1>
           {subheadline ? (
             <p className="type-body text-foreground-muted container-reading mt-8">{subheadline}</p>
           ) : null}
@@ -54,13 +58,15 @@ export function Hero({ content, heroMedia, signatureProject }: HeroProps) {
 
       {heroMedia ? (
         <div className="mt-12">
-          <Media
-            asset={heroMedia}
-            aspectRatio={16 / 9}
-            sizes="100vw"
-            priority
-            showCaption={false}
-          />
+          <HeroSpaceReveal>
+            <Media
+              asset={heroMedia}
+              aspectRatio={16 / 9}
+              sizes="100vw"
+              priority
+              showCaption={false}
+            />
+          </HeroSpaceReveal>
         </div>
       ) : null}
 

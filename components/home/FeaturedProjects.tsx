@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { MaskReveal } from "@/components/motion";
 import { ProjectCard } from "@/components/public/ProjectCard";
 import { Section } from "@/components/public/Section";
 import { cn } from "@/lib/utils/cn";
@@ -32,27 +33,31 @@ export function FeaturedProjects({ content, projects }: FeaturedProjectsProps) {
         {visible.map((project, index) => (
           <div key={project.id} className="grid-editorial items-end">
             <ProjectCard
-              project={project}
-              index={index + 1}
-              aspectRatio={index % 2 === 0 ? 4 / 3 : 3 / 4}
-              sizes="(min-width: 1280px) 58vw, (min-width: 768px) 70vw, 100vw"
               className={cn(
                 "col-span-12",
                 index % 2 === 0
                   ? "desktop:col-span-7 desktop:col-start-1"
                   : "desktop:col-span-5 desktop:col-start-8",
               )}
+              project={project}
+              index={index + 1}
+              aspectRatio={index % 2 === 0 ? 4 / 3 : 3 / 4}
+              sizes="(min-width: 1280px) 58vw, (min-width: 768px) 70vw, 100vw"
+              imageReveal
             />
-            <p
+            <MaskReveal
+              as="div"
               className={cn(
                 "type-body text-foreground-muted desktop:mt-0 col-span-12 mt-6",
                 index % 2 === 0
                   ? "desktop:col-span-4 desktop:col-start-9"
                   : "desktop:col-span-5 desktop:col-start-1 desktop:row-start-1",
               )}
+              contentClassName="block"
+              delay={index * 0.08 + 0.12}
             >
               {project.summary}
-            </p>
+            </MaskReveal>
           </div>
         ))}
       </div>

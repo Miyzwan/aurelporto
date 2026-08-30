@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { ImageReveal } from "@/components/motion";
 import { ImageMedia } from "@/components/public/ImageMedia";
 import { cn } from "@/lib/utils/cn";
 import type { ProjectSummary } from "@/types/content";
@@ -11,6 +12,7 @@ interface ProjectCardProps {
   aspectRatio?: number;
   sizes?: string;
   priority?: boolean;
+  imageReveal?: boolean;
   className?: string;
 }
 
@@ -31,25 +33,31 @@ export function ProjectCard({
   aspectRatio = 4 / 3,
   sizes = "(min-width: 1280px) 45vw, (min-width: 768px) 50vw, 100vw",
   priority = false,
+  imageReveal = false,
   className,
 }: ProjectCardProps) {
   const facts = [project.projectType, project.location, String(project.year)].filter(Boolean);
+  const media = project.heroMedia ? (
+    <ImageMedia
+      asset={project.heroMedia}
+      aspectRatio={aspectRatio}
+      sizes={sizes}
+      priority={priority}
+      showCaption={false}
+      imageClassName="group-hover:scale-[1.02] transition-[transform,opacity] duration-(--duration-slow) ease-(--ease-out-editorial)"
+    />
+  ) : (
+    <div style={{ aspectRatio }} aria-hidden="true" />
+  );
 
   return (
     <article className={cn("group", className)}>
       <Link href={`/projects/${project.slug}`} className="block">
         <div className="bg-surface-sunken overflow-hidden">
-          {project.heroMedia ? (
-            <ImageMedia
-              asset={project.heroMedia}
-              aspectRatio={aspectRatio}
-              sizes={sizes}
-              priority={priority}
-              showCaption={false}
-              imageClassName="group-hover:scale-[1.02] transition-[transform,opacity] duration-(--duration-slow) ease-(--ease-out-editorial)"
-            />
+          {imageReveal && project.heroMedia ? (
+            <ImageReveal contentClassName="block">{media}</ImageReveal>
           ) : (
-            <div style={{ aspectRatio }} aria-hidden="true" />
+            media
           )}
         </div>
 

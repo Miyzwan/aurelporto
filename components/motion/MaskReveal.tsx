@@ -14,6 +14,7 @@ interface MaskRevealProps {
   contentClassName?: string;
   delay?: number;
   disabled?: boolean;
+  as?: "div" | "span";
 }
 
 /** Reveals text from its overflow mask without hiding it from no-JS visitors. */
@@ -23,6 +24,7 @@ export function MaskReveal({
   contentClassName,
   delay = 0,
   disabled = false,
+  as = "div",
 }: MaskRevealProps) {
   const rootRef = useRef<HTMLDivElement>(null);
   const shouldReduceMotion = useReducedMotion();
@@ -50,11 +52,32 @@ export function MaskReveal({
     },
   );
 
-  return (
-    <div ref={rootRef} className={cn("overflow-hidden", className)} data-motion="mask-reveal">
+  const content =
+    as === "span" ? (
+      <span data-mask-reveal-content className={cn("block", contentClassName)}>
+        {children}
+      </span>
+    ) : (
       <div data-mask-reveal-content className={contentClassName}>
         {children}
       </div>
+    );
+
+  if (as === "span") {
+    return (
+      <span
+        ref={rootRef}
+        className={cn("block overflow-hidden", className)}
+        data-motion="mask-reveal"
+      >
+        {content}
+      </span>
+    );
+  }
+
+  return (
+    <div ref={rootRef} className={cn("overflow-hidden", className)} data-motion="mask-reveal">
+      {content}
     </div>
   );
 }

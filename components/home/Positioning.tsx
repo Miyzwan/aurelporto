@@ -1,3 +1,4 @@
+import { MaskReveal } from "@/components/motion";
 import { Section } from "@/components/public/Section";
 import type { PositioningContent } from "@/types/content";
 
@@ -20,10 +21,16 @@ export function Positioning({ content }: PositioningProps) {
       <div className="grid-editorial">
         <div className="desktop:col-span-9 col-span-12">
           <p className="type-heading">
-            {lines.map((line) => (
-              <span key={line} className="block">
+            {lines.map((line, index) => (
+              <MaskReveal
+                key={`${line}-${index}`}
+                as="span"
+                className="block"
+                contentClassName="block"
+                delay={index * 0.08}
+              >
                 {line}
-              </span>
+              </MaskReveal>
             ))}
           </p>
         </div>
