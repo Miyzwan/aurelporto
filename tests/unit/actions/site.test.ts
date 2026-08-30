@@ -108,4 +108,12 @@ describe("updateSiteSettings", () => {
     expect(result.fieldErrors?.email).toBeDefined();
     expect(mocks.requireAdmin).not.toHaveBeenCalled();
   });
+
+  it("fails if caller is not an authenticated admin", async () => {
+    mocks.requireAdmin.mockRejectedValue(new Error("Unauthorized"));
+
+    const result = await updateSiteSettings(sampleInput);
+
+    expect(result).toEqual({ ok: false, formError: "Could not update site settings." });
+  });
 });

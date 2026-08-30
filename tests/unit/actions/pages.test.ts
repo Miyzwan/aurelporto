@@ -20,8 +20,10 @@ vi.mock("@/lib/data/pages", () => ({
 }));
 
 import {
+  archivePageSection,
   createPageSection,
   deletePageSection,
+  publishPageSection,
   reorderPageSections,
   togglePageSection,
   updatePageMetadata,
@@ -167,6 +169,32 @@ describe("page and section actions", () => {
     expect(builder.update).toHaveBeenCalledWith({ is_enabled: false });
   });
 
+  it("publishes a page section", async () => {
+    const builder = query({ ...sampleSection, status: "published", pages: { slug: "about" } });
+    mocks.createServerSupabaseClient.mockResolvedValue({
+      from: vi.fn().mockReturnValue(builder),
+    });
+    mocks.mapPageSection.mockReturnValue({ ...sampleSection, status: "published" });
+
+    const result = await publishPageSection(SECTION_ID);
+
+    expect(result.ok).toBe(true);
+    expect(builder.update).toHaveBeenCalledWith({ status: "published" });
+  });
+
+  it("archives a page section", async () => {
+    const builder = query({ ...sampleSection, status: "archived", pages: { slug: "about" } });
+    mocks.createServerSupabaseClient.mockResolvedValue({
+      from: vi.fn().mockReturnValue(builder),
+    });
+    mocks.mapPageSection.mockReturnValue({ ...sampleSection, status: "archived" });
+
+    const result = await archivePageSection(SECTION_ID);
+
+    expect(result.ok).toBe(true);
+    expect(builder.update).toHaveBeenCalledWith({ status: "archived" });
+  });
+
   it("deletes a page section", async () => {
     const builder = query({ pages: { slug: "about" } });
     mocks.createServerSupabaseClient.mockResolvedValue({
@@ -196,5 +224,41 @@ describe("page and section actions", () => {
       p_page_id: PAGE_ID,
       p_section_ids: [SECTION_ID, SECTION_ID_2],
     });
+  });
+
+  it("fails if user is not authorized as admin", async () => {
+    mocks.requireAdmin.mockRejectedValue(new Error("Unauthorized"));
+
+    const result = await updatePageMetadata({
+      id: PAGE_ID,
+      slug: "about",
+      title: "About Gabrielle",
+      navLabel: "About",
+      seoTitle: "About Gabrielle",
+      seoDescription: "Studio profile.",
+      ogMediaId: null,
+      status: "published",
+    });
+
+    expect(result).toEqual({ ok: false, formError: "Could not update page metadata." });
+  });
+
+  it("rejects invalid section JSON without touching the database", async () => {
+    const result = await createPageSection({
+      pageId: PAGE_ID,
+      sectionKey: "hero",
+      sectionType: "home_hero",
+      content: {
+        // Missing required headline, primaryCtaLabel, etc.
+        eyebrow: "Studio",
+      } as unknown as PageSection["content"],
+      isEnabled: true,
+      status: "published",
+    });
+
+    expect(result.ok).toBe(false);
+    if (result.ok) throw new Error("Expected validation failure for invalid section JSON");
+    expect(result.fieldErrors?.headline).toBeDefined();
+    expect(mocks.requireAdmin).not.toHaveBeenCalled();
   });
 });

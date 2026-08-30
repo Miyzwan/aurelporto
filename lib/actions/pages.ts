@@ -7,11 +7,12 @@ import type { ActionResult } from "@/components/admin/action-result";
 import { requireAdmin } from "@/lib/auth/require-admin";
 import { mapPage, mapPageSection } from "@/lib/data/pages";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
-import type { Database, TablesInsert, TablesUpdate } from "@/types/database.generated";
-import { uuidSchema } from "@/lib/validation/common";
+import type { TablesInsert, TablesUpdate } from "@/types/database.generated";
+import { contentStatusSchema, uuidSchema } from "@/lib/validation/common";
 import { pageFormSchema, pageSectionFormSchema } from "@/lib/validation/pages";
 import { pageSectionContentSchemas } from "@/lib/validation/page-sections";
 import type {
+  ContentStatus,
   Page,
   PageMetadataMutationInput,
   PageSection,
@@ -261,6 +262,57 @@ export async function togglePageSection(
     console.error("[togglePageSection] unexpected error:", error);
     return { ok: false, formError: "Could not toggle page section visibility." };
   }
+}
+
+export async function setPageSectionStatus(
+  id: string,
+  status: ContentStatus,
+): Promise<ActionResult<PageSection>> {
+  const idParsed = uuidSchema.safeParse(id);
+  const statusParsed = contentStatusSchema.safeParse(status);
+  if (!idParsed.success || !statusParsed.success) {
+    return { ok: false, formError: "Invalid section status payload." };
+  }
+
+  try {
+    await requireAdmin();
+    const supabase = await createServerSupabaseClient();
+    const { data, error } = await supabase
+      .from("page_sections")
+      .update({ status: statusParsed.data })
+      .eq("id", idParsed.data)
+      .select("*, pages(slug)")
+      .single();
+
+    if (error || !data) {
+      console.error("[setPageSectionStatus] update failed:", error);
+      return { ok: false, formError: "Could not update page section status." };
+    }
+
+    const slug = (data as unknown as { pages?: { slug?: string } }).pages?.slug;
+    revalidatePath("/admin/pages");
+    if (slug) {
+      revalidatePath(`/admin/pages/${slug}`);
+      revalidatePath(slug === "home" ? "/" : `/${slug}`);
+    }
+
+    return {
+      ok: true,
+      data: mapPageSection(data),
+      message: `Section ${statusParsed.data}.`,
+    };
+  } catch (error) {
+    console.error("[setPageSectionStatus] unexpected error:", error);
+    return { ok: false, formError: "Could not update page section status." };
+  }
+}
+
+export async function publishPageSection(id: string): Promise<ActionResult<PageSection>> {
+  return setPageSectionStatus(id, "published");
+}
+
+export async function archivePageSection(id: string): Promise<ActionResult<PageSection>> {
+  return setPageSectionStatus(id, "archived");
 }
 
 export async function deletePageSection(id: string): Promise<ActionResult<{ id: string }>> {

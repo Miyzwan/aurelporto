@@ -148,4 +148,35 @@ describe("navigation actions", () => {
       item_ids: [ITEM_ID, ITEM_ID_2],
     });
   });
+
+  it("fails if user is not authorized as admin", async () => {
+    mocks.requireAdmin.mockRejectedValue(new Error("Unauthorized"));
+
+    const result = await createNavigationItem({
+      label: "Projects",
+      href: "/projects",
+      placement: "header",
+      sortOrder: 0,
+      isVisible: true,
+      targetBlank: false,
+    });
+
+    expect(result).toEqual({ ok: false, formError: "Could not create navigation item." });
+  });
+
+  it("returns field errors on invalid input", async () => {
+    const result = await createNavigationItem({
+      label: "",
+      href: "",
+      placement: "header",
+      sortOrder: 0,
+      isVisible: true,
+      targetBlank: false,
+    });
+
+    expect(result.ok).toBe(false);
+    if (result.ok) throw new Error("Expected validation failure");
+    expect(result.fieldErrors?.label).toBeDefined();
+    expect(result.fieldErrors?.href).toBeDefined();
+  });
 });
