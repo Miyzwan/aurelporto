@@ -1,19 +1,20 @@
 import { ProjectFilter, buildFilterOptions } from "@/components/projects/ProjectFilter";
 import { ProjectGrid } from "@/components/projects/ProjectGrid";
 import { Section } from "@/components/public/Section";
-import { placeholderProjects } from "@/lib/content/placeholder-projects";
+import { getPublishedProjects } from "@/lib/data/projects";
 import { slugify } from "@/lib/utils/slugify";
 
 /**
- * INT-007 replaces the fixture import with a published-only Supabase read.
- * PRD section 27 keeps the optional year/location/scope filters out until the
- * portfolio passes eight projects.
+ * The index is request-rendered so published content and category counts are
+ * current after an admin changes project visibility or ordering.
  */
+export const dynamic = "force-dynamic";
+
 export default async function ProjectsPage({ searchParams }: PageProps<"/projects">) {
   const params = await searchParams;
   const requested = typeof params.category === "string" ? params.category : null;
 
-  const projects = [...placeholderProjects].sort((a, b) => a.sortOrder - b.sortOrder);
+  const projects = await getPublishedProjects();
   const options = buildFilterOptions(projects, slugify);
 
   // An unknown category falls back to All rather than rendering an empty page

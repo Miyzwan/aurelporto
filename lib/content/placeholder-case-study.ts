@@ -3,8 +3,8 @@ import type { MediaAsset } from "@/types/content";
 import type { ProjectSection } from "@/types/project-sections";
 
 /**
- * TEMPORARY case-study fixtures for FE-007. INT-007 replaces these with
- * `project_sections` rows plus their resolved media.
+ * Legacy case-study fixtures for renderer tests. The public route now reads
+ * `project_sections` rows plus their resolved media from Supabase.
  *
  * Copy is drawn from CLIENT_CONTEXT sections 11–17 only. Nothing here claims a
  * commission, a built result, a floor area, or a location the source does not

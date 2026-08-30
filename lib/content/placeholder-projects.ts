@@ -1,8 +1,8 @@
 import type { MediaAsset, ProjectSummary } from "@/types/content";
 
 /**
- * TEMPORARY project fixtures for FE-005..FE-008. INT-007 replaces these with
- * Supabase reads; BE-012 seeds the real rows.
+ * Legacy project fixtures for component tests. Public routes use the
+ * published-only Supabase repository in `lib/data/projects.ts`.
  *
  * Sourced strictly from CLIENT_CONTEXT sections 9–17:
  *  - Titles use the descriptive project-page headings, because the mapping
