@@ -30,6 +30,7 @@ credentials*
 
 # markdown and project spec docs
 *.md
+!README.md
 
 # AI tools and agent configurations
 .claude/

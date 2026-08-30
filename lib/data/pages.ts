@@ -2,10 +2,11 @@ import { requireAdmin } from "@/lib/auth/require-admin";
 import { createPublicSupabaseClient } from "@/lib/supabase/public";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import type { Page, PageSection } from "@/types/content";
-import type { Tables } from "@/types/database.generated";
+import type { Database, Tables } from "@/types/database.generated";
 import { parsePageSectionContent } from "@/lib/validation/page-sections";
 import { pageRowSchema, pageSectionRowSchema } from "@/lib/validation/pages";
 import { settingsSchema } from "@/lib/validation/site";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 import { parseRecord, throwDatabaseError } from "./errors";
 
@@ -60,7 +61,7 @@ export async function getPublishedPage(slug: string): Promise<Page | null> {
 }
 
 async function readPageSections(
-  client: Awaited<ReturnType<typeof createServerSupabaseClient>>,
+  client: SupabaseClient<Database>,
   pageId: string,
   publishedOnly: boolean,
 ): Promise<PageSection[]> {
@@ -81,11 +82,28 @@ async function readPageSections(
   return (data ?? []).map(mapPageSection);
 }
 
-export async function getPublishedPageSections(slug: string): Promise<PageSection[]> {
-  const page = await getPublishedPage(slug);
-  if (!page) return [];
+export async function getPublishedPageWithSections(
+  slug: string,
+): Promise<{ page: Page; sections: PageSection[] } | null> {
+  const client = createPublicSupabaseClient();
+  const { data, error } = await client
+    .from("pages")
+    .select("*")
+    .eq("slug", slug)
+    .eq("status", "published")
+    .maybeSingle();
+  if (error) throwDatabaseError("published page", error);
+  if (!data) return null;
 
-  return readPageSections(createPublicSupabaseClient(), page.id, true);
+  const page = mapPage(data);
+  const sections = await readPageSections(client, page.id, true);
+
+  return { page, sections };
+}
+
+export async function getPublishedPageSections(slug: string): Promise<PageSection[]> {
+  const result = await getPublishedPageWithSections(slug);
+  return result?.sections ?? [];
 }
 
 export async function getAdminPages(): Promise<Page[]> {

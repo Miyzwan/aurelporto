@@ -1,17 +1,27 @@
+import { notFound } from "next/navigation";
+
 import { ExplorationGallery } from "@/components/explorations/ExplorationGallery";
 import { Section } from "@/components/public/Section";
-import { placeholderExplorations } from "@/lib/content/placeholder-pages";
+import { PublicPageHeader } from "@/components/public/PublicPageHeader";
+import { PublicPageSectionRenderer } from "@/components/public/PublicPageSectionRenderer";
+import { getPublicPageData } from "@/lib/content/public-pages";
+import { getPublishedExplorations } from "@/lib/data/explorations";
 
-export default function ExplorationsPage() {
+export const dynamic = "force-dynamic";
+
+export default async function ExplorationsPage() {
+  const pageData = await getPublicPageData("explorations");
+  if (!pageData) notFound();
+
+  const explorations = await getPublishedExplorations();
+
   return (
-    <Section eyebrow="Explorations">
-      <div className="grid-editorial">
-        <h1 className="type-heading desktop:col-span-8 col-span-12">Studies and experiments.</h1>
-      </div>
-
-      <div className="mt-16">
-        <ExplorationGallery explorations={placeholderExplorations} />
-      </div>
-    </Section>
+    <>
+      <PublicPageHeader page={pageData.page} />
+      <PublicPageSectionRenderer sections={pageData.sections} />
+      <Section tight>
+        <ExplorationGallery explorations={explorations} />
+      </Section>
+    </>
   );
 }

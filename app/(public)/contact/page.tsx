@@ -1,18 +1,28 @@
+import { notFound } from "next/navigation";
+
 import { ProjectInquiryForm } from "@/components/contact/ProjectInquiryForm";
 import { Section } from "@/components/public/Section";
-import { placeholderServices } from "@/lib/content/placeholder-home";
-import { placeholderInquiryConfig } from "@/lib/content/placeholder-pages";
+import { PublicPageHeader } from "@/components/public/PublicPageHeader";
+import { PublicPageSectionRenderer } from "@/components/public/PublicPageSectionRenderer";
+import { getPublicPageData } from "@/lib/content/public-pages";
+import { getPublicInquiryConfig } from "@/lib/data/site";
+import { getPublishedServices } from "@/lib/data/services";
 
-export default function ContactPage() {
+export const dynamic = "force-dynamic";
+
+export default async function ContactPage() {
+  const pageData = await getPublicPageData("contact");
+  if (!pageData) notFound();
+
+  const [config, services] = await Promise.all([getPublicInquiryConfig(), getPublishedServices()]);
+
   return (
-    <Section eyebrow="Contact">
-      <div className="grid-editorial">
-        <h1 className="type-heading desktop:col-span-8 col-span-12">Start a conversation.</h1>
-      </div>
-
-      <div className="mt-16">
-        <ProjectInquiryForm config={placeholderInquiryConfig} services={placeholderServices} />
-      </div>
-    </Section>
+    <>
+      <PublicPageHeader page={pageData.page} />
+      <PublicPageSectionRenderer sections={pageData.sections} />
+      <Section tight>
+        <ProjectInquiryForm config={config} services={services} />
+      </Section>
+    </>
   );
 }

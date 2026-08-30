@@ -81,6 +81,10 @@ export async function getPublishedServices(): Promise<ServiceSummary[]> {
   }));
 }
 
+export async function getPublishedServiceDetails(): Promise<ServiceDetail[]> {
+  return readServices(createPublicSupabaseClient(), true);
+}
+
 export async function getAdminServices(): Promise<ServiceDetail[]> {
   await requireAdmin();
   return readServices(await createServerSupabaseClient(), false);

@@ -1,19 +1,27 @@
+import { notFound } from "next/navigation";
+
 import { ProcessTimeline } from "@/components/process/ProcessTimeline";
 import { Section } from "@/components/public/Section";
-import { placeholderProcessSteps } from "@/lib/content/placeholder-home";
+import { PublicPageHeader } from "@/components/public/PublicPageHeader";
+import { PublicPageSectionRenderer } from "@/components/public/PublicPageSectionRenderer";
+import { getPublicPageData } from "@/lib/content/public-pages";
+import { getPublishedProcessSteps } from "@/lib/data/process";
 
-export default function ProcessPage() {
+export const dynamic = "force-dynamic";
+
+export default async function ProcessPage() {
+  const pageData = await getPublicPageData("process");
+  if (!pageData) notFound();
+
+  const steps = await getPublishedProcessSteps();
+
   return (
-    <Section eyebrow="Process">
-      <div className="grid-editorial">
-        <h1 className="type-heading desktop:col-span-8 col-span-12">
-          How a space gets from brief to visualization.
-        </h1>
-      </div>
-
-      <div className="mt-16">
-        <ProcessTimeline steps={placeholderProcessSteps} />
-      </div>
-    </Section>
+    <>
+      <PublicPageHeader page={pageData.page} />
+      <PublicPageSectionRenderer sections={pageData.sections} />
+      <Section tight>
+        <ProcessTimeline steps={steps} />
+      </Section>
+    </>
   );
 }

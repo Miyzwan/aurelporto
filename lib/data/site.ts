@@ -2,8 +2,12 @@ import { requireAdmin } from "@/lib/auth/require-admin";
 import { createPublicSupabaseClient } from "@/lib/supabase/public";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import type { Tables } from "@/types/database.generated";
-import type { NavigationItem, SiteSettings } from "@/types/content";
-import { navigationItemRowSchema, siteSettingsRowSchema } from "@/lib/validation/site";
+import type { InquiryConfig, NavigationItem, SiteSettings } from "@/types/content";
+import {
+  inquiryConfigSchema,
+  navigationItemRowSchema,
+  siteSettingsRowSchema,
+} from "@/lib/validation/site";
 
 import { parseRecord, throwDatabaseError, throwNotFound } from "./errors";
 
@@ -67,6 +71,18 @@ async function readNavigation(
 
 export async function getPublicSiteSettings(): Promise<SiteSettings> {
   return readSiteSettings(createPublicSupabaseClient());
+}
+
+export async function getPublicInquiryConfig(): Promise<InquiryConfig> {
+  const { data, error } = await createPublicSupabaseClient()
+    .from("site_settings")
+    .select("inquiry_config")
+    .eq("id", 1)
+    .maybeSingle();
+  if (error) throwDatabaseError("inquiry config", error);
+  if (!data) throwNotFound("site settings");
+
+  return parseRecord(inquiryConfigSchema, data.inquiry_config, "1", "site_settings.inquiry_config");
 }
 
 export async function getPublicNavigation(): Promise<NavigationItem[]> {
