@@ -17,11 +17,6 @@ jobs:
   quality:
     name: Lint, typecheck, test, and build
     runs-on: ubuntu-latest
-    env:
-      # The quality gate does not access Supabase. These non-secret values are
-      # only required because next.config.ts validates the image host at load time.
-      NEXT_PUBLIC_SUPABASE_URL: https://ci-placeholder.supabase.co
-      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ci-placeholder-publishable-key
 
     steps:
       - name: Check out repository
@@ -40,10 +35,19 @@ jobs:
         run: npm run lint
 
       - name: Typecheck
+        env:
+          # next.config.ts validates the image host while generating route types.
+          NEXT_PUBLIC_SUPABASE_URL: https://ci-placeholder.supabase.co
+          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ci-placeholder-publishable-key
         run: npm run typecheck
 
       - name: Run unit tests
         run: npm test
 
       - name: Build application
+        env:
+          # The quality build does not access Supabase; these values only make
+          # the Next.js image configuration valid during build-time evaluation.
+          NEXT_PUBLIC_SUPABASE_URL: https://ci-placeholder.supabase.co
+          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ci-placeholder-publishable-key
         run: npm run build
