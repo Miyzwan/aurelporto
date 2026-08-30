@@ -143,6 +143,8 @@ export function MobileMenu({ items, cta, siteName }: MobileMenuProps) {
         {cta ? (
           <Link
             href={cta.href}
+            target={cta.targetBlank ? "_blank" : undefined}
+            rel={cta.targetBlank ? "noreferrer noopener" : undefined}
             className="border-line-strong type-meta mt-12 inline-flex w-full items-center justify-center border px-6 py-4"
           >
             {cta.label}

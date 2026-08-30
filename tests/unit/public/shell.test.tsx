@@ -107,4 +107,40 @@ describe("Footer", () => {
     );
     expect(screen.getByRole("link", { name: "LinkedIn" })).toHaveAttribute("rel", "noreferrer noopener");
   });
+
+  it("honors target_blank for social navigation items from the database", () => {
+    render(
+      <Footer
+        siteSettings={emptySettings}
+        navigation={[]}
+        socialNavigation={[
+          {
+            id: "social-internal",
+            label: "Portfolio",
+            href: "/portfolio",
+            placement: "social",
+            sortOrder: 0,
+            isVisible: true,
+            targetBlank: false,
+          },
+          {
+            id: "social-external",
+            label: "LinkedIn",
+            href: "https://example.com/linkedin",
+            placement: "social",
+            sortOrder: 1,
+            isVisible: true,
+            targetBlank: true,
+          },
+        ]}
+      />,
+    );
+
+    expect(screen.getByRole("link", { name: "Portfolio" })).not.toHaveAttribute("target");
+    expect(screen.getByRole("link", { name: "LinkedIn" })).toHaveAttribute("target", "_blank");
+    expect(screen.getByRole("link", { name: "LinkedIn" })).toHaveAttribute(
+      "rel",
+      "noreferrer noopener",
+    );
+  });
 });

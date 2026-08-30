@@ -123,6 +123,21 @@ export async function getPublishedProjects(
   return rows.map((row) => mapProjectSummary(row, media));
 }
 
+export async function getPublishedProjectById(projectId: string): Promise<ProjectSummary | null> {
+  const supabase = createPublicSupabaseClient();
+  const { data, error } = await supabase
+    .from("projects")
+    .select("*")
+    .eq("id", projectId)
+    .eq("status", "published")
+    .maybeSingle();
+  if (error) throwDatabaseError("published project", error);
+  if (!data) return null;
+
+  const media = await readProjectMedia(supabase, [data]);
+  return mapProjectSummary(data, media);
+}
+
 export async function getPublishedProjectBySlug(slug: string): Promise<ProjectDetail | null> {
   const supabase = createPublicSupabaseClient();
   const { data, error } = await supabase

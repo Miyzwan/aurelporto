@@ -45,6 +45,8 @@ export function Header({ siteSettings, navigation, cta }: HeaderProps) {
               <li>
                 <Link
                   href={cta.href}
+                  target={cta.targetBlank ? "_blank" : undefined}
+                  rel={cta.targetBlank ? "noreferrer noopener" : undefined}
                   className="border-line-strong type-meta hover:bg-ink hover:text-warm-white inline-flex items-center border px-5 py-2.5 transition-colors duration-(--duration-quick)"
                 >
                   {cta.label}

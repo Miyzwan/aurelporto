@@ -5,6 +5,7 @@ import type { NavigationItem, SiteSettings } from "@/types/content";
 interface FooterProps {
   siteSettings: SiteSettings;
   navigation: NavigationItem[];
+  socialNavigation?: NavigationItem[];
 }
 
 /**
@@ -12,10 +13,27 @@ interface FooterProps {
  * number, email, or social account may be published (CLIENT_CONTEXT section 4),
  * so the footer must look intentional with all of them absent.
  */
-export function Footer({ siteSettings, navigation }: FooterProps) {
+export function Footer({ siteSettings, navigation, socialNavigation = [] }: FooterProps) {
   const items = navigation.filter((item) => item.isVisible).sort((a, b) => a.sortOrder - b.sortOrder);
+  const socialItems =
+    socialNavigation.length > 0
+      ? socialNavigation
+          .filter((item) => item.isVisible)
+          .sort((a, b) => a.sortOrder - b.sortOrder)
+      : siteSettings.socialLinks.map((link, index) => ({
+          id: `site-social-${link.href}`,
+          label: link.label,
+          href: link.href,
+          placement: "social" as const,
+          sortOrder: index,
+          isVisible: true,
+          // The legacy site_settings JSON shape contains only label and href;
+          // social links are external by definition until navigation items
+          // provide an explicit target_blank value.
+          targetBlank: true,
+        }));
   const hasContact = Boolean(siteSettings.email ?? siteSettings.phone ?? siteSettings.whatsapp);
-  const hasSocial = siteSettings.socialLinks.length > 0;
+  const hasSocial = socialItems.length > 0;
 
   return (
     <footer className="border-line mt-(--spacing-section) border-t">
@@ -92,12 +110,12 @@ export function Footer({ siteSettings, navigation }: FooterProps) {
             <div className="tablet:col-span-4 desktop:col-span-2 col-span-12 mt-12 desktop:mt-0">
               <h2 className="type-meta text-foreground-subtle">Elsewhere</h2>
               <ul className="mt-4 flex flex-col gap-2">
-                {siteSettings.socialLinks.map((link) => (
-                  <li key={link.href}>
+                {socialItems.map((link) => (
+                  <li key={link.id}>
                     <a
                       href={link.href}
-                      target="_blank"
-                      rel="noreferrer noopener"
+                      target={link.targetBlank ? "_blank" : undefined}
+                      rel={link.targetBlank ? "noreferrer noopener" : undefined}
                       className="type-spec"
                     >
                       {link.label}

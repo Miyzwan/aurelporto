@@ -1,17 +1,18 @@
 import { Footer } from "@/components/public/Footer";
 import { Header } from "@/components/public/Header";
-import {
-  placeholderFooterNavigation,
-  placeholderHeaderCta,
-  placeholderHeaderNavigation,
-  placeholderSiteSettings,
-} from "@/lib/content/placeholder-shell";
+import { getPublicShellData } from "@/lib/content/public-shell";
 
 /**
- * INT-005 swaps the placeholder fixtures below for Supabase reads of
- * `site_settings` and `navigation_items`. The component contracts stay the same.
+ * Public content is read at request time so changes to site settings and
+ * navigation are visible without a rebuild. Admin routes use the same rule
+ * because their server-side session also requires dynamic rendering.
  */
-export default function PublicLayout({ children }: LayoutProps<"/">) {
+export const dynamic = "force-dynamic";
+
+export default async function PublicLayout({ children }: LayoutProps<"/">) {
+  const { siteSettings, headerNavigation, footerNavigation, socialNavigation, cta } =
+    await getPublicShellData();
+
   return (
     <>
       <a
@@ -21,17 +22,17 @@ export default function PublicLayout({ children }: LayoutProps<"/">) {
         Skip to content
       </a>
 
-      <Header
-        siteSettings={placeholderSiteSettings}
-        navigation={placeholderHeaderNavigation}
-        cta={placeholderHeaderCta}
-      />
+      <Header siteSettings={siteSettings} navigation={headerNavigation} cta={cta} />
 
       <main id="main-content" tabIndex={-1} className="flex-1">
         {children}
       </main>
 
-      <Footer siteSettings={placeholderSiteSettings} navigation={placeholderFooterNavigation} />
+      <Footer
+        siteSettings={siteSettings}
+        navigation={footerNavigation}
+        socialNavigation={socialNavigation}
+      />
     </>
   );
 }

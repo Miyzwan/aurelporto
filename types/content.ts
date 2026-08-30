@@ -62,6 +62,7 @@ export interface SiteSettings {
 export interface CallToAction {
   label: string;
   href: string;
+  targetBlank?: boolean;
 }
 
 export type MediaType = "image" | "video";
