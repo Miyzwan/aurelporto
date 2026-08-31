@@ -104,6 +104,33 @@ Run `Production Database` from the Actions tab only after reviewing the
 migration list; it links the project, applies migrations, and never includes
 `seed.sql`.
 
+### Admin access
+
+Public signup is disabled on the hosted project, so the only auth users are
+the ones created deliberately. Admin access is a single Auth user plus a
+matching `profiles` row, created manually:
+
+1. Create the Auth user from the Supabase dashboard (Authentication → Users)
+   or the Auth admin API with a confirmed email and a strong password from a
+   password manager. The email does not need to be a deliverable inbox, but it
+   must never be an address owned by someone else.
+2. Insert the profile in the SQL Editor:
+
+```sql
+insert into public.profiles (id, role, display_name)
+values ('<auth-user-uuid>', 'admin', 'Portfolio Admin');
+```
+
+The `profiles` table only accepts the `admin` role, no signup trigger
+auto-creates profiles, and `public.is_admin()` gates every admin mutation
+through RLS. A signed-in user without a matching admin profile is rejected by
+`requireAdmin()` with a 404.
+
+Rotate the admin password through the Auth admin API (`PUT
+/auth/v1/admin/users/{id}` with `{"password": "..."}` using the secret key) or
+by deleting and recreating the user with a fresh profile row. Never commit a
+password or add one to `supabase/seed.sql`.
+
 ## Quality checks
 
 ```bash
