@@ -10,8 +10,6 @@ import { getPublishedProcessSteps } from "@/lib/data/process";
 import { generatePageMetadata } from "@/lib/seo/metadata";
 import { buildBreadcrumbSchema, StructuredData } from "@/lib/seo/structured-data";
 
-export const dynamic = "force-dynamic";
-
 export async function generateMetadata(): Promise<Metadata> {
   return generatePageMetadata("process");
 }
@@ -20,7 +18,7 @@ export default async function ProcessPage() {
   const pageData = await getPublicPageData("process");
   if (!pageData) notFound();
 
-  const steps = await getPublishedProcessSteps();
+  const steps = await getPublishedProcessSteps().catch(() => []);
   const breadcrumbs = buildBreadcrumbSchema([
     { name: "Home", path: "/" },
     { name: "Process", path: "/process" },

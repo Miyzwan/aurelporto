@@ -27,6 +27,7 @@
 *.cert
 *.secret
 credentials*
+foreign_flow_tools_id.json
 
 # markdown and project spec docs
 *.md
@@ -48,12 +49,15 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
+# env files
 .env*
 .env.local
 .env.development.local
 .env.test.local
 .env.production.local
+
+# allow the committed environment contract template
+!.env.example
 
 # vercel
 .vercel
@@ -61,9 +65,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
-
-# allow the committed environment contract template
-!.env.example
 
 # playwright
 /test-results/
@@ -74,6 +75,3 @@ next-env.d.ts
 # supabase local
 /supabase/.temp/
 /supabase/.branches/
-
-# playwright artifacts
-/test-results/

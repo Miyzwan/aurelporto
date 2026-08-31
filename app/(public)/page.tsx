@@ -10,7 +10,7 @@ import {
   StructuredData,
 } from "@/lib/seo/structured-data";
 
-export const dynamic = "force-dynamic";
+import { placeholderSiteSettings } from "@/lib/content/placeholder-shell";
 
 export async function generateMetadata(): Promise<Metadata> {
   return generatePageMetadata("home");
@@ -19,7 +19,7 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function HomePage() {
   const [sections, siteSettings] = await Promise.all([
     getHomePageSections(),
-    getPublicSiteSettings(),
+    getPublicSiteSettings().catch(() => placeholderSiteSettings),
   ]);
 
   const personSchema = buildPersonOrOrganizationSchema(siteSettings);

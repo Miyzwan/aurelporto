@@ -60,6 +60,17 @@ export async function getPublishedPage(slug: string): Promise<Page | null> {
   return data ? mapPage(data) : null;
 }
 
+export async function getPublishedPages(): Promise<Page[]> {
+  const { data, error } = await createPublicSupabaseClient()
+    .from("pages")
+    .select("*")
+    .eq("status", "published")
+    .order("slug");
+  if (error) throwDatabaseError("published pages", error);
+
+  return (data ?? []).map(mapPage);
+}
+
 async function readPageSections(
   client: SupabaseClient<Database>,
   pageId: string,

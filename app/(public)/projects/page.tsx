@@ -1,14 +1,13 @@
 import type { Metadata } from "next";
 
-import { ProjectFilter, buildFilterOptions } from "@/components/projects/ProjectFilter";
+import { ProjectFilter } from "@/components/projects/ProjectFilter";
 import { ProjectGrid } from "@/components/projects/ProjectGrid";
 import { Section } from "@/components/public/Section";
+import { buildFilterOptions } from "@/lib/content/project-filters";
 import { getPublishedProjects } from "@/lib/data/projects";
 import { generatePageMetadata } from "@/lib/seo/metadata";
 import { buildBreadcrumbSchema, StructuredData } from "@/lib/seo/structured-data";
 import { slugify } from "@/lib/utils/slugify";
-
-export const dynamic = "force-dynamic";
 
 export async function generateMetadata(): Promise<Metadata> {
   const metadata = await generatePageMetadata("projects");
@@ -16,8 +15,8 @@ export async function generateMetadata(): Promise<Metadata> {
     return metadata;
   }
   return {
-    title: "Selected Work — Interior Architecture & Design",
-    description: "Explore curated residential and commercial interior case studies.",
+    title: "Projects",
+    description: "Selected interior design projects and case studies.",
   };
 }
 
@@ -25,7 +24,7 @@ export default async function ProjectsPage({ searchParams }: PageProps<"/project
   const params = await searchParams;
   const requested = typeof params.category === "string" ? params.category : null;
 
-  const projects = await getPublishedProjects();
+  const projects = await getPublishedProjects().catch(() => []);
   const options = buildFilterOptions(projects, slugify);
 
   const active = options.some((option) => option.value === requested) ? requested : null;

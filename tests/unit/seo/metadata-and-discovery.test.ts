@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({
   getPublicSiteSettings: vi.fn(),
   getPublicMediaAssetsByIds: vi.fn(),
+  getPublishedPages: vi.fn(),
   getPublishedPageWithSections: vi.fn(),
   getPublishedProjectBySlug: vi.fn(),
   getPublishedProjects: vi.fn(),
@@ -17,6 +18,7 @@ vi.mock("@/lib/data/media", () => ({
   getPublicMediaAssetsByIds: mocks.getPublicMediaAssetsByIds,
 }));
 vi.mock("@/lib/data/pages", () => ({
+  getPublishedPages: mocks.getPublishedPages,
   getPublishedPageWithSections: mocks.getPublishedPageWithSections,
 }));
 vi.mock("@/lib/data/projects", () => ({
@@ -103,6 +105,15 @@ describe("SEO, Metadata, and Discovery (INT-015)", () => {
 
     mocks.getPublicSiteSettings.mockResolvedValue(sampleSiteSettings);
     mocks.getPublicMediaAssetsByIds.mockResolvedValue([sampleMedia]);
+    mocks.getPublishedPages.mockResolvedValue([
+      { id: "p-home", slug: "home", title: "Home", status: "published" },
+      { id: "p-projects", slug: "projects", title: "Projects", status: "published" },
+      { id: "p-services", slug: "services", title: "Services", status: "published" },
+      { id: "p-process", slug: "process", title: "Process", status: "published" },
+      { id: "p-explorations", slug: "explorations", title: "Explorations", status: "published" },
+      { id: "p-about", slug: "about", title: "About", status: "published" },
+      { id: "p-contact", slug: "contact", title: "Contact", status: "published" },
+    ]);
     mocks.getPublishedProjects.mockResolvedValue([sampleProject]);
     mocks.getPublishedExplorations.mockResolvedValue([]);
   });
@@ -247,6 +258,21 @@ describe("SEO, Metadata, and Discovery (INT-015)", () => {
       // Verify admin / auth / preview routes are excluded
       expect(urls.some((url) => url.includes("/admin"))).toBe(false);
       expect(urls.some((url) => url.includes("/auth"))).toBe(false);
+    });
+
+    it("excludes unpublished pages from sitemap", async () => {
+      mocks.getPublishedPages.mockResolvedValue([
+        { id: "p-home", slug: "home", title: "Home", status: "published" },
+        { id: "p-projects", slug: "projects", title: "Projects", status: "published" },
+      ]);
+      mocks.getPublishedProjects.mockResolvedValue([]);
+
+      const items = await sitemap();
+      const urls = items.map((item) => item.url);
+
+      expect(urls).toContain("https://gabrielleaurelia.com/");
+      expect(urls).toContain("https://gabrielleaurelia.com/projects");
+      expect(urls).not.toContain("https://gabrielleaurelia.com/about");
     });
   });
 });

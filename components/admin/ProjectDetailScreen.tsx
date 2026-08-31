@@ -62,15 +62,11 @@ export function ProjectDetailScreen({
   const [projectType, setProjectType] = useState(project?.projectType ?? "");
   const [areaSqm, setAreaSqm] = useState<string>(project?.areaSqm ? String(project.areaSqm) : "");
   const [projectStatus, setProjectStatus] = useState<ProjectStatus>(
-    project?.projectStatus ?? "completed",
+    project?.projectStatus ?? "concept",
   );
   const [clientType, setClientType] = useState(project?.clientType ?? "");
-  const [designRole, setDesignRole] = useState<string[]>(
-    project?.designRole ?? ["Interior Architecture"],
-  );
-  const [services, setServices] = useState<string[]>(
-    project?.services ?? ["Spatial Planning", "Material Curation"],
-  );
+  const [designRole, setDesignRole] = useState<string[]>(project?.designRole ?? []);
+  const [services, setServices] = useState<string[]>(project?.services ?? []);
   const [summary, setSummary] = useState(project?.summary ?? "");
   const [heroMediaId, setHeroMediaId] = useState<string | null>(project?.heroMediaId ?? null);
   const [featured, setFeatured] = useState(project?.featured ?? false);

@@ -8,6 +8,7 @@ import { ProjectSectionRenderer } from "@/components/public/ProjectSectionRender
 import {
   getNextPublishedProject,
   getPublishedProjectBySlug,
+  getPublishedProjects,
   getPublishedProjectSections,
 } from "@/lib/data/projects";
 import { getPublicSiteSettings } from "@/lib/data/site";
@@ -18,7 +19,12 @@ import {
   StructuredData,
 } from "@/lib/seo/structured-data";
 
-export const dynamic = "force-dynamic";
+import { placeholderSiteSettings } from "@/lib/content/placeholder-shell";
+
+export async function generateStaticParams() {
+  const projects = await getPublishedProjects().catch(() => []);
+  return projects.map((p) => ({ slug: p.slug }));
+}
 
 export async function generateMetadata({
   params,
@@ -30,13 +36,13 @@ export async function generateMetadata({
 export default async function ProjectCaseStudyPage({ params }: PageProps<"/projects/[slug]">) {
   const { slug } = await params;
 
-  const project = await getPublishedProjectBySlug(slug);
+  const project = await getPublishedProjectBySlug(slug).catch(() => null);
   if (!project) notFound();
 
   const [sections, next, siteSettings] = await Promise.all([
-    getPublishedProjectSections(project.id),
-    getNextPublishedProject(project.id),
-    getPublicSiteSettings(),
+    getPublishedProjectSections(project.id).catch(() => []),
+    getNextPublishedProject(project.id).catch(() => null),
+    getPublicSiteSettings().catch(() => placeholderSiteSettings),
   ]);
 
   const projectSchema = buildProjectSchema(project, siteSettings);

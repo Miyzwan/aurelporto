@@ -10,7 +10,7 @@ vi.mock("@/lib/supabase/public", () => ({
   createPublicSupabaseClient: mocks.createPublicSupabaseClient,
 }));
 
-import { getPublishedPageSections } from "@/lib/data/pages";
+import { getPublishedPages, getPublishedPageSections } from "@/lib/data/pages";
 import { ContentValidationError } from "@/lib/validation/errors";
 
 const PAGE_ID = "00000000-0000-0000-0000-000000000001";
@@ -115,5 +115,26 @@ describe("content repositories", () => {
       name: "ContentValidationError",
       recordId: SECTION_ID,
     } satisfies Partial<ContentValidationError>);
+  });
+
+  it("fetches and maps published pages", async () => {
+    const page = {
+      id: PAGE_ID,
+      slug: "about",
+      title: "About",
+      nav_label: "About",
+      seo_title: null,
+      seo_description: null,
+      og_media_id: null,
+      status: "published" as const,
+      created_at: "2026-01-01T00:00:00Z",
+      updated_at: "2026-01-01T00:00:00Z",
+    };
+    mocks.publicClient.from.mockReturnValueOnce(queryResult([page]));
+
+    const pages = await getPublishedPages();
+    expect(pages).toHaveLength(1);
+    expect(pages[0]?.slug).toBe("about");
+    expect(pages[0]?.title).toBe("About");
   });
 });

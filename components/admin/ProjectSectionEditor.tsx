@@ -710,10 +710,7 @@ function ProjectSectionEditorDialog({
 
       const addItem = () => {
         setContent({
-          items: [
-            ...items,
-            { role: "Architect / Builder", name: "Studio Partner", url: "https://" },
-          ],
+          items: [...items, { role: "", name: "", url: "" }],
         });
       };
 

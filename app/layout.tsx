@@ -12,8 +12,8 @@ export async function generateMetadata(): Promise<Metadata> {
   } catch (error) {
     console.error("[RootLayout] failed to generate root metadata:", error);
     return {
-      title: "Gabrielle Aurelia — Interior Designer",
-      description: "Editorial interior architecture and spatial curation.",
+      title: "Gabrielle Aurelia Sulistya — Interior Designer",
+      description: "Interior design portfolio.",
     };
   }
 }

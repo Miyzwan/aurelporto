@@ -130,6 +130,13 @@ describe("Admin Projects UI", () => {
     expect(screen.getByText(/Preview Case Study/i)).toBeInTheDocument();
   });
 
+  it("initializes new project with neutral defaults (concept status and empty roles)", () => {
+    render(<ProjectDetailScreen isNew assets={[sampleMedia]} />);
+
+    const statusSelect = screen.getByLabelText(/Project Stage/i) as HTMLSelectElement;
+    expect(statusSelect.value).toBe("concept");
+  });
+
   it("renders ProjectSectionEditor with form fields and saves without raw JSON", async () => {
     const user = userEvent.setup();
     const handleSave = vi.fn().mockResolvedValue(undefined);

@@ -10,8 +10,6 @@ import { getPublishedExplorations } from "@/lib/data/explorations";
 import { generatePageMetadata } from "@/lib/seo/metadata";
 import { buildBreadcrumbSchema, StructuredData } from "@/lib/seo/structured-data";
 
-export const dynamic = "force-dynamic";
-
 export async function generateMetadata(): Promise<Metadata> {
   return generatePageMetadata("explorations");
 }
@@ -20,7 +18,7 @@ export default async function ExplorationsPage() {
   const pageData = await getPublicPageData("explorations");
   if (!pageData) notFound();
 
-  const explorations = await getPublishedExplorations();
+  const explorations = await getPublishedExplorations().catch(() => []);
   const breadcrumbs = buildBreadcrumbSchema([
     { name: "Home", path: "/" },
     { name: "Explorations", path: "/explorations" },

@@ -7,8 +7,6 @@ import { getPublicPageData } from "@/lib/content/public-pages";
 import { generatePageMetadata } from "@/lib/seo/metadata";
 import { buildBreadcrumbSchema, StructuredData } from "@/lib/seo/structured-data";
 
-export const dynamic = "force-dynamic";
-
 export async function generateMetadata(): Promise<Metadata> {
   return generatePageMetadata("about");
 }

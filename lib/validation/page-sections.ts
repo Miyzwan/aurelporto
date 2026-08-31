@@ -80,7 +80,7 @@ const credibilityStatSchema = z
 
 export const credibilitySchema = z
   .object({
-    title: requiredText(160),
+    title: z.string().trim().max(160),
     stats: z.array(credibilityStatSchema).max(30),
     testimonialIds: z.array(uuidSchema).max(50),
   })

@@ -12,8 +12,6 @@ import { getPublicInquiryConfig } from "@/lib/data/site";
 import { generatePageMetadata } from "@/lib/seo/metadata";
 import { buildBreadcrumbSchema, StructuredData } from "@/lib/seo/structured-data";
 
-export const dynamic = "force-dynamic";
-
 export async function generateMetadata(): Promise<Metadata> {
   return generatePageMetadata("contact");
 }
@@ -22,7 +20,19 @@ export default async function ContactPage() {
   const pageData = await getPublicPageData("contact");
   if (!pageData) notFound();
 
-  const [config, services] = await Promise.all([getPublicInquiryConfig(), getPublishedServices()]);
+  const [config, services] = await Promise.all([
+    getPublicInquiryConfig().catch(() => ({
+      projectTypes: ["Residential", "Commercial", "Other"],
+      projectStatuses: ["New Build", "Renovation", "Concept"],
+      timelineOptions: ["Immediately", "1-3 Months", "3-6 Months", "Flexible"],
+      budgetOptions: [],
+      showBudgetField: false,
+      showPhoneField: true,
+      successTitle: "Thank you",
+      successBody: "Your inquiry has been received.",
+    })),
+    getPublishedServices().catch(() => []),
+  ]);
   const breadcrumbs = buildBreadcrumbSchema([
     { name: "Home", path: "/" },
     { name: "Contact", path: "/contact" },

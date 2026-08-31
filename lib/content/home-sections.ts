@@ -91,61 +91,70 @@ function byId<T extends { id: string }>(ids: string[], records: T[]): T[] {
 }
 
 export async function getHomePageSections(): Promise<ResolvedHomeSection[]> {
-  const sections = (await getPublishedPageSections("home"))
-    .filter((section) => section.isEnabled && section.status === "published")
-    .sort((a, b) => a.sortOrder - b.sortOrder || a.id.localeCompare(b.id));
-  if (sections.length === 0) return [];
+  try {
+    const sections = (await getPublishedPageSections("home"))
+      .filter((section) => section.isEnabled && section.status === "published")
+      .sort((a, b) => a.sortOrder - b.sortOrder || a.id.localeCompare(b.id));
+    if (sections.length === 0) return [];
 
-  const mediaIds = unique(sections.flatMap(mediaIdsFor));
-  const signatureProjectIds = unique(signatureProjectIdsFor(sections));
-  const testimonialIds = unique(testimonialIdsFor(sections));
-  const maxFeaturedItems = maxFeaturedItemsFor(sections);
+    const mediaIds = unique(sections.flatMap(mediaIdsFor));
+    const signatureProjectIds = unique(signatureProjectIdsFor(sections));
+    const testimonialIds = unique(testimonialIdsFor(sections));
+    const maxFeaturedItems = maxFeaturedItemsFor(sections);
 
-  const [media, featuredProjects, services, processSteps, testimonials, signatureProjects] =
-    await Promise.all([
-      mediaIds.length > 0 ? getPublicMediaAssetsByIds(mediaIds) : Promise.resolve([]),
-      maxFeaturedItems > 0 ? getFeaturedProjects(maxFeaturedItems) : Promise.resolve([]),
-      hasSection(sections, "services_preview") ? getPublishedServices() : Promise.resolve([]),
-      hasSection(sections, "process_preview") ? getPublishedProcessSteps() : Promise.resolve([]),
-      testimonialIds.length > 0 ? getPublishedTestimonials() : Promise.resolve([]),
-      Promise.all(signatureProjectIds.map((id) => getPublishedProjectById(id))),
-    ]);
+    const [media, featuredProjects, services, processSteps, testimonials, signatureProjects] =
+      await Promise.all([
+        mediaIds.length > 0 ? getPublicMediaAssetsByIds(mediaIds) : Promise.resolve([]),
+        maxFeaturedItems > 0 ? getFeaturedProjects(maxFeaturedItems) : Promise.resolve([]),
+        hasSection(sections, "services_preview") ? getPublishedServices() : Promise.resolve([]),
+        hasSection(sections, "process_preview") ? getPublishedProcessSteps() : Promise.resolve([]),
+        testimonialIds.length > 0 ? getPublishedTestimonials() : Promise.resolve([]),
+        Promise.all(signatureProjectIds.map((id) => getPublishedProjectById(id))),
+      ]);
 
-  const mediaById = new Map(media.map((asset) => [asset.id, asset]));
-  const signatureProjectById = new Map(
-    signatureProjects
-      .filter((project): project is ProjectSummary => Boolean(project))
-      .map((project) => [project.id, project]),
-  );
-  const testimonialsById = byId(testimonialIds, testimonials);
-  const orderedFeaturedProjects = sortFeaturedProjects(
-    featuredProjects.filter((project) => project.featured),
-  );
+    const mediaById = new Map(media.map((asset) => [asset.id, asset]));
+    const signatureProjectById = new Map(
+      signatureProjects
+        .filter((project): project is ProjectSummary => Boolean(project))
+        .map((project) => [project.id, project]),
+    );
+    const testimonialsById = byId(testimonialIds, testimonials);
+    const orderedFeaturedProjects = sortFeaturedProjects(
+      featuredProjects.filter((project) => project.featured),
+    );
 
-  return sections.map((section) => {
-    const heroContent =
-      section.sectionType === "home_hero" ? contentOf<HomeHeroContent>(section) : null;
-    const materialContent =
-      section.sectionType === "material_moment" ? contentOf<MaterialMomentContent>(section) : null;
-    const galleryContent =
-      section.sectionType === "gallery" ? contentOf<GalleryContent>(section) : null;
+    return sections.map((section) => {
+      const heroContent =
+        section.sectionType === "home_hero" ? contentOf<HomeHeroContent>(section) : null;
+      const materialContent =
+        section.sectionType === "material_moment"
+          ? contentOf<MaterialMomentContent>(section)
+          : null;
+      const galleryContent =
+        section.sectionType === "gallery" ? contentOf<GalleryContent>(section) : null;
 
-    return {
-      section,
-      heroMedia: heroContent?.heroMediaId ? (mediaById.get(heroContent.heroMediaId) ?? null) : null,
-      signatureProject: heroContent?.signatureProjectId
-        ? (signatureProjectById.get(heroContent.signatureProjectId) ?? null)
-        : null,
-      featuredProjects: orderedFeaturedProjects,
-      services: hasSection([section], "services_preview") ? services : [],
-      processSteps: hasSection([section], "process_preview") ? processSteps : [],
-      media: byId(materialContent?.mediaIds ?? galleryContent?.mediaIds ?? [], media),
-      testimonials:
-        section.sectionType === "credibility"
-          ? byId(contentOf<CredibilityContent>(section).testimonialIds, testimonialsById)
-          : [],
-    };
-  });
+      return {
+        section,
+        heroMedia: heroContent?.heroMediaId
+          ? (mediaById.get(heroContent.heroMediaId) ?? null)
+          : null,
+        signatureProject: heroContent?.signatureProjectId
+          ? (signatureProjectById.get(heroContent.signatureProjectId) ?? null)
+          : null,
+        featuredProjects: orderedFeaturedProjects,
+        services: hasSection([section], "services_preview") ? services : [],
+        processSteps: hasSection([section], "process_preview") ? processSteps : [],
+        media: byId(materialContent?.mediaIds ?? galleryContent?.mediaIds ?? [], media),
+        testimonials:
+          section.sectionType === "credibility"
+            ? byId(contentOf<CredibilityContent>(section).testimonialIds, testimonialsById)
+            : [],
+      };
+    });
+  } catch (error) {
+    console.error("[home-sections] failed to fetch home sections:", error);
+    return [];
+  }
 }
 
 /** Alias kept descriptive for callers that need the adapter's purpose. */

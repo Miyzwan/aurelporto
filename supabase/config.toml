@@ -117,17 +117,7 @@ enabled = true
 # The maximum file size allowed (e.g. "5MB", "500KB").
 file_size_limit = "80MiB"
 
-[storage.buckets.portfolio-public]
-public = true
-file_size_limit = "80MiB"
-allowed_mime_types = [
-  "image/jpeg",
-  "image/png",
-  "image/webp",
-  "image/avif",
-  "video/mp4",
-  "video/webm",
-]
+# Storage bucket 'portfolio-public' is managed via migrations (20260830000008_create_portfolio_public_storage.sql)
 
 # Allow connections via S3 compatible clients
 [storage.s3_protocol]

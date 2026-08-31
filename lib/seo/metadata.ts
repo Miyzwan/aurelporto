@@ -30,12 +30,14 @@ export async function getSiteSeoDefaults(): Promise<SiteSeoDefaults> {
       }
     }
 
-    const siteName = settings.siteName || "Gabrielle Aurelia";
+    const siteName = settings.siteName || "Gabrielle Aurelia Sulistya";
     const professionalRole = settings.professionalRole || "Interior Designer";
     const defaultSeoTitle = settings.defaultSeoTitle || `${siteName} — ${professionalRole}`;
     const defaultSeoDescription =
       settings.defaultSeoDescription ||
-      `${siteName} is a minimalist interior designer and architectural studio based in ${settings.location || "Jakarta"}.`;
+      (settings.location
+        ? `${siteName} — ${professionalRole}, ${settings.location}.`
+        : `${siteName} — ${professionalRole}.`);
 
     return {
       siteName,
@@ -46,10 +48,10 @@ export async function getSiteSeoDefaults(): Promise<SiteSeoDefaults> {
     };
   } catch {
     return {
-      siteName: "Gabrielle Aurelia",
+      siteName: "Gabrielle Aurelia Sulistya",
       professionalRole: "Interior Designer",
-      defaultSeoTitle: "Gabrielle Aurelia — Interior Designer",
-      defaultSeoDescription: "Minimalist interior architecture and spatial curation.",
+      defaultSeoTitle: "Gabrielle Aurelia Sulistya — Interior Designer",
+      defaultSeoDescription: "Interior design portfolio.",
       defaultOgImageUrl: undefined,
     };
   }
@@ -97,104 +99,126 @@ export async function generateRootMetadata(): Promise<Metadata> {
  * Generates database-driven metadata for standard public pages (e.g. home, about, services, process, explorations, contact).
  */
 export async function generatePageMetadata(slug: string): Promise<Metadata> {
-  const [defaults, pageData] = await Promise.all([
-    getSiteSeoDefaults(),
-    getPublishedPageWithSections(slug),
-  ]);
+  try {
+    const [defaults, pageData] = await Promise.all([
+      getSiteSeoDefaults(),
+      getPublishedPageWithSections(slug).catch(() => null),
+    ]);
 
-  if (!pageData) {
+    if (!pageData) {
+      if (slug === "home") {
+        return {
+          title: { absolute: defaults.defaultSeoTitle },
+          description: defaults.defaultSeoDescription,
+        };
+      }
+      return {
+        title: "Page Not Found",
+        robots: { index: false, follow: false },
+      };
+    }
+
+    const page = pageData.page;
+    const pagePath = slug === "home" ? "/" : `/${slug}`;
+    const canonicalUrl = absoluteUrl(pagePath);
+
+    const title = page.seoTitle || (slug === "home" ? defaults.defaultSeoTitle : page.title);
+    const description = page.seoDescription || defaults.defaultSeoDescription;
+
+    let ogImageUrl = defaults.defaultOgImageUrl;
+    if (page.ogMediaId) {
+      const assets = await getPublicMediaAssetsByIds([page.ogMediaId]).catch(() => []);
+      if (assets.length > 0 && assets[0]) {
+        ogImageUrl = resolveAbsoluteMediaUrl(assets[0]);
+      }
+    }
+
+    const ogImages = ogImageUrl ? [{ url: ogImageUrl, width: 1200, height: 630, alt: title }] : [];
+
     return {
-      title: "Page Not Found",
-      robots: { index: false, follow: false },
+      title: slug === "home" ? { absolute: title } : title,
+      description,
+      openGraph: {
+        type: "website",
+        siteName: defaults.siteName,
+        title,
+        description,
+        url: canonicalUrl,
+        images: ogImages,
+      },
+      twitter: {
+        card: "summary_large_image",
+        title,
+        description,
+        images: ogImages.map((img) => img.url),
+      },
+      alternates: {
+        canonical: canonicalUrl,
+      },
+    };
+  } catch (error) {
+    console.error(`[seo/metadata] failed to generate metadata for ${slug}:`, error);
+    return {
+      title: "Gabrielle Aurelia Sulistya — Interior Designer",
+      description: "Interior design portfolio.",
     };
   }
-
-  const page = pageData.page;
-  const pagePath = slug === "home" ? "/" : `/${slug}`;
-  const canonicalUrl = absoluteUrl(pagePath);
-
-  const title = page.seoTitle || (slug === "home" ? defaults.defaultSeoTitle : page.title);
-  const description = page.seoDescription || defaults.defaultSeoDescription;
-
-  let ogImageUrl = defaults.defaultOgImageUrl;
-  if (page.ogMediaId) {
-    const assets = await getPublicMediaAssetsByIds([page.ogMediaId]);
-    if (assets.length > 0) {
-      ogImageUrl = resolveAbsoluteMediaUrl(assets[0]);
-    }
-  }
-
-  const ogImages = ogImageUrl ? [{ url: ogImageUrl, width: 1200, height: 630, alt: title }] : [];
-
-  return {
-    title: slug === "home" ? { absolute: title } : title,
-    description,
-    openGraph: {
-      type: "website",
-      siteName: defaults.siteName,
-      title,
-      description,
-      url: canonicalUrl,
-      images: ogImages,
-    },
-    twitter: {
-      card: "summary_large_image",
-      title,
-      description,
-      images: ogImages.map((img) => img.url),
-    },
-    alternates: {
-      canonical: canonicalUrl,
-    },
-  };
 }
 
 /**
  * Generates database-driven metadata for public project case studies.
  */
 export async function generateProjectMetadata(slug: string): Promise<Metadata> {
-  const [defaults, project] = await Promise.all([
-    getSiteSeoDefaults(),
-    getPublishedProjectBySlug(slug),
-  ]);
+  try {
+    const [defaults, project] = await Promise.all([
+      getSiteSeoDefaults(),
+      getPublishedProjectBySlug(slug).catch(() => null),
+    ]);
 
-  if (!project) {
+    if (!project) {
+      return {
+        title: "Project Not Found",
+        robots: { index: false, follow: false },
+      };
+    }
+
+    const canonicalUrl = absoluteUrl(`/projects/${slug}`);
+    const title = project.seoTitle || `${project.title} — ${project.projectType}`;
+    const description = project.seoDescription || project.summary;
+
+    const ogAsset = project.ogMedia || project.heroMedia;
+    const ogImageUrl = ogAsset ? resolveAbsoluteMediaUrl(ogAsset) : defaults.defaultOgImageUrl;
+
+    const ogImages = ogImageUrl
+      ? [{ url: ogImageUrl, width: 1200, height: 630, alt: project.title }]
+      : [];
+
+    return {
+      title,
+      description,
+      openGraph: {
+        type: "article",
+        siteName: defaults.siteName,
+        title,
+        description,
+        url: canonicalUrl,
+        images: ogImages,
+      },
+      twitter: {
+        card: "summary_large_image",
+        title,
+        description,
+        images: ogImages.map((img) => img.url),
+      },
+      alternates: {
+        canonical: canonicalUrl,
+      },
+    };
+  } catch (error) {
+    console.error(`[seo/metadata] failed to generate project metadata for ${slug}:`, error);
     return {
       title: "Project Not Found",
       robots: { index: false, follow: false },
     };
   }
-
-  const canonicalUrl = absoluteUrl(`/projects/${slug}`);
-  const title = project.seoTitle || `${project.title} — ${project.projectType}`;
-  const description = project.seoDescription || project.summary;
-
-  const ogAsset = project.ogMedia || project.heroMedia;
-  const ogImageUrl = ogAsset ? resolveAbsoluteMediaUrl(ogAsset) : defaults.defaultOgImageUrl;
-
-  const ogImages = ogImageUrl
-    ? [{ url: ogImageUrl, width: 1200, height: 630, alt: project.title }]
-    : [];
-
-  return {
-    title,
-    description,
-    openGraph: {
-      type: "article",
-      siteName: defaults.siteName,
-      title,
-      description,
-      url: canonicalUrl,
-      images: ogImages,
-    },
-    twitter: {
-      card: "summary_large_image",
-      title,
-      description,
-      images: ogImages.map((img) => img.url),
-    },
-    alternates: {
-      canonical: canonicalUrl,
-    },
-  };
 }

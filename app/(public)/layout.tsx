@@ -4,16 +4,17 @@ import { Footer } from "@/components/public/Footer";
 import { Header } from "@/components/public/Header";
 import { getPublicShellData } from "@/lib/content/public-shell";
 
-/**
- * Public content is read at request time so changes to site settings and
- * navigation are visible without a rebuild. Admin routes use the same rule
- * because their server-side session also requires dynamic rendering.
- */
-export const dynamic = "force-dynamic";
+import { placeholderSiteSettings } from "@/lib/content/placeholder-shell";
 
 export default async function PublicLayout({ children }: LayoutProps<"/">) {
   const { siteSettings, headerNavigation, footerNavigation, socialNavigation, cta } =
-    await getPublicShellData();
+    await getPublicShellData().catch(() => ({
+      siteSettings: placeholderSiteSettings,
+      headerNavigation: [],
+      footerNavigation: [],
+      socialNavigation: [],
+      cta: null,
+    }));
 
   return (
     <ReducedMotionProvider>

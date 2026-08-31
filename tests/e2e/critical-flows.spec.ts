@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-test.describe("Critical Product Flows (INT-016)", () => {
+test.describe("Critical Product Flows (INT-016 & Audit F-04)", () => {
   test("1. Home loads published sections and core landmarks", async ({ page }) => {
     await page.goto("/");
     await expect(page.getByRole("main")).toBeVisible();
@@ -80,14 +80,16 @@ test.describe("Critical Product Flows (INT-016)", () => {
     await page.setViewportSize({ width: 375, height: 667 });
     await page.goto("/");
 
-    const menuTrigger = page.getByRole("button", { name: /menu/i });
+    const menuTrigger = page.getByRole("button", { name: /^menu$/i });
     if (await menuTrigger.isVisible()) {
       await menuTrigger.click();
-      await expect(page.getByRole("dialog").or(page.getByRole("navigation"))).toBeVisible();
+      const menuDialog = page.getByRole("dialog", { name: /navigation/i });
+      await expect(menuDialog).toBeVisible();
 
       // Close menu
-      const closeBtn = page.getByRole("button", { name: /close/i }).or(menuTrigger);
+      const closeBtn = menuDialog.getByRole("button", { name: /close/i });
       await closeBtn.click();
+      await expect(menuDialog).toBeHidden();
     }
   });
 
@@ -100,5 +102,52 @@ test.describe("Critical Product Flows (INT-016)", () => {
 
     const sitemapRes = await request.get("/sitemap.xml");
     expect(sitemapRes.ok()).toBe(true);
+  });
+
+  test("10. Supporting public routes render headings and content", async ({ page }) => {
+    for (const path of ["/about", "/services", "/process", "/explorations"]) {
+      const res = await page.goto(path);
+      expect(res?.status()).toBe(200);
+      await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+      await expect(page.getByRole("main")).toBeVisible();
+    }
+  });
+
+  test("11. Skip-to-content accessible landmark link works", async ({ page }) => {
+    await page.goto("/");
+    const skipLink = page.getByRole("link", { name: /skip to content/i });
+    await expect(skipLink).toHaveAttribute("href", "#main-content");
+  });
+
+  test("12. Public case study route handles valid params", async ({ page }) => {
+    const res = await page.goto("/projects");
+    expect(res?.status()).toBe(200);
+    const firstProjectLink = page.locator("a[href^='/projects/']").first();
+    if (await firstProjectLink.isVisible()) {
+      await firstProjectLink.click();
+      await expect(page).toHaveURL(/\/projects\/.+/);
+      await expect(page.getByRole("main")).toBeVisible();
+    }
+  });
+
+  test("13. Signout endpoint redirects unauthenticated caller to login", async ({ page }) => {
+    await page.goto("/auth/signout");
+    await expect(page).toHaveURL(/\/auth\/login/);
+  });
+
+  test("14. Custom 404 page renders design system layout and return link", async ({ page }) => {
+    const res = await page.goto("/this-path-does-not-exist-at-all");
+    expect(res?.status()).toBe(404);
+    await expect(page.getByRole("heading", { name: /page not found/i })).toBeVisible();
+    const returnLink = page.getByRole("link", { name: /return to home/i });
+    await expect(returnLink).toBeVisible();
+  });
+
+  test("15. Header navigation contains primary public links", async ({ page }) => {
+    await page.goto("/");
+    const banner = page.getByRole("banner");
+    await expect(banner).toBeVisible();
+    const brandLink = banner.getByRole("link").first();
+    await expect(brandLink).toHaveAttribute("href", "/");
   });
 });

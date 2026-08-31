@@ -63,7 +63,12 @@ function renderSection(section: ResolvedPublicPageSection) {
     case "cta":
       return <FinalCTA content={contentOf<CtaContent>(section)} />;
     case "credibility":
-      return <Credibility content={contentOf<CredibilityContent>(section)} testimonials={[]} />;
+      return (
+        <Credibility
+          content={contentOf<CredibilityContent>(section)}
+          testimonials={section.testimonials || []}
+        />
+      );
     default:
       return null;
   }
