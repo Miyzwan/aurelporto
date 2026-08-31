@@ -131,6 +131,88 @@ Rotate the admin password through the Auth admin API (`PUT
 by deleting and recreating the user with a fresh profile row. Never commit a
 password or add one to `supabase/seed.sql`.
 
+## Vercel deployment
+
+The application is hosted on Vercel as a single project imported from
+`github.com/Miyzwan/aurelporto`. `vercel.json` pins the framework preset to
+`nextjs` and the function region to `sin1` (Singapore) so server rendering sits
+next to the Supabase project in `ap-southeast-1`. Everything else is left to
+Vercel's Next.js auto-detection: build command `npm run build`, the repository
+root as the root directory (there is no `src/`), and `main` as the production
+branch.
+
+Add the environment variables below **before** the first build. The build fails
+without `NEXT_PUBLIC_SUPABASE_URL` because `next.config.ts` derives the remote
+image host from it.
+
+### Environment variables
+
+Four variables, no more. The names are fixed by the master plan and identical in
+every environment; only the values differ.
+
+| Variable | Production | Preview | Development |
+| --- | --- | --- | --- |
+| `NEXT_PUBLIC_SUPABASE_URL` | hosted project URL | same hosted project | not set in Vercel |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | hosted publishable key | same hosted key | not set in Vercel |
+| `SUPABASE_SECRET_KEY` | hosted secret key, marked Sensitive | same hosted key, marked Sensitive | not set in Vercel |
+| `NEXT_PUBLIC_SITE_URL` | canonical production origin | QA branch alias URL | not set in Vercel |
+
+Until DEP-006 assigns a custom domain, the production `NEXT_PUBLIC_SITE_URL` is
+the project's `*.vercel.app` production URL; the canonical domain itself is
+still `NEEDS_CONFIRMATION`. Preview URLs are per-deployment, so a single Preview
+value cannot match every branch — set it to the branch alias of the branch used
+for QA and accept that other previews carry that origin in their metadata.
+Previews are not indexed, so this is cosmetic.
+
+Vercel's Development environment is deliberately left empty. Local development
+reads `.env.local` and points at the local Supabase stack, so `vercel env pull`
+must never be the way hosted credentials reach a laptop.
+
+### No staging environment
+
+The master plan assumes a hosted `portfolio-staging` project behind Vercel
+Preview. Supabase resource limits allow only one hosted project, so Preview and
+Production both read and write the single `portfolio-production` database. This
+is a deliberate deviation with real consequences, mitigated as follows:
+
+- Preview deployments are gated by Vercel Deployment Protection (Vercel
+  Authentication) so only team members can reach a preview that serves live
+  data.
+- `app/robots.ts` returns a blanket `disallow: /` whenever `VERCEL_ENV` is not
+  `production`, so a preview is never indexed as a duplicate host.
+- Preview QA (DEP-005) writes to production. Any draft, media upload, or test
+  inquiry created during QA must be deleted afterwards, because DEP-002 requires
+  production to hold no sample content.
+- Schema changes still go through the `Production Database` workflow with
+  required reviewers; previews never migrate the database.
+
+### Secret handling
+
+`SUPABASE_SECRET_KEY` is server-only and exists solely for the validated public
+inquiry insert in `lib/supabase/secret.ts`. It must never be renamed to a
+`NEXT_PUBLIC_*` variable, read from a client component, or committed. Prove the
+boundary against real build output:
+
+```bash
+npm run build
+npm run verify:client-bundle
+```
+
+The script scans everything under `.next/static`, source maps included, and
+fails on the configured key value or on any `sb_secret_` / `service_role` /
+`SUPABASE_SECRET_KEY` marker. CI runs it after every build.
+
+Vercel applies environment variables to new deployments only, and `NEXT_PUBLIC_*`
+values are inlined at build time, so **redeploy after changing any variable** —
+editing a value in the dashboard does not affect the running deployment.
+
+Confirm the environment split from outside once a deployment exists:
+
+```bash
+curl -s https://<production-host>/robots.txt   # Allow: / plus the admin disallows
+curl -s https://<preview-host>/robots.txt      # Disallow: /
+```
+
 ## Quality checks
 
 ```bash

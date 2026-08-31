@@ -54,3 +54,8 @@ jobs:
           NEXT_PUBLIC_SUPABASE_URL: https://ci-placeholder.supabase.co
           NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ci-placeholder-publishable-key
         run: npm run build
+
+      - name: Verify the secret key is absent from the client bundle
+        # DEP-004 acceptance criterion. Vercel injects SUPABASE_SECRET_KEY into
+        # every deployment, so the boundary is asserted against build output.
+        run: npm run verify:client-bundle

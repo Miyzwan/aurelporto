@@ -102,6 +102,7 @@ describe("SEO, Metadata, and Discovery (INT-015)", () => {
     vi.clearAllMocks();
     process.env.NEXT_PUBLIC_SITE_URL = "https://gabrielleaurelia.com";
     process.env.NEXT_PUBLIC_SUPABASE_URL = "https://test.supabase.co";
+    delete process.env.VERCEL_ENV;
 
     mocks.getPublicSiteSettings.mockResolvedValue(sampleSiteSettings);
     mocks.getPublicMediaAssetsByIds.mockResolvedValue([sampleMedia]);
@@ -240,6 +241,17 @@ describe("SEO, Metadata, and Discovery (INT-015)", () => {
         }),
       );
       expect(result.sitemap).toBe("https://gabrielleaurelia.com/sitemap.xml");
+    });
+
+    // DEP-004: without a staging Supabase project, previews serve production
+    // content, so they must never be crawlable as a duplicate host.
+    it("blocks crawling entirely on non-production Vercel deployments", () => {
+      process.env.VERCEL_ENV = "preview";
+
+      const result = robots();
+
+      expect(result.rules).toEqual({ userAgent: "*", disallow: "/" });
+      expect(result.sitemap).toBeUndefined();
     });
 
     it("generates sitemap with static public routes and published projects", async () => {
