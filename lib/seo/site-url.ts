@@ -10,6 +10,18 @@ export function getSiteBaseUrl(): string {
   if (envUrl && envUrl.trim().length > 0) {
     return envUrl.replace(/\/+$/, "");
   }
+
+  // Automatic fallback for Vercel production and preview deployments
+  const vercelProductionUrl = process.env.VERCEL_PROJECT_PRODUCTION_URL;
+  if (vercelProductionUrl && vercelProductionUrl.trim().length > 0) {
+    return `https://${vercelProductionUrl.replace(/\/+$/, "")}`;
+  }
+
+  const vercelUrl = process.env.VERCEL_URL ?? process.env.NEXT_PUBLIC_VERCEL_URL;
+  if (vercelUrl && vercelUrl.trim().length > 0) {
+    return `https://${vercelUrl.replace(/\/+$/, "")}`;
+  }
+
   return "http://localhost:3000";
 }
 
