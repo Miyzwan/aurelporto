@@ -1,4 +1,4 @@
-name: Staging Integration
+name: Integration
 
 on:
   workflow_dispatch:
@@ -10,7 +10,7 @@ jobs:
   playwright:
     name: Playwright smoke tests
     runs-on: ubuntu-latest
-    environment: staging
+    environment: production
     env:
       CI: true
       NEXT_PUBLIC_SITE_URL: http://127.0.0.1:3000
@@ -34,5 +34,5 @@ jobs:
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium webkit
 
-      - name: Run staging smoke tests
+      - name: Run smoke tests
         run: npm run test:e2e

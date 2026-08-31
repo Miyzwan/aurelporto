@@ -31,54 +31,36 @@ npm run dev
 
 The site runs at `http://localhost:3000`. The local Supabase Studio runs at `http://localhost:54323`.
 
-## Hosted Supabase environments
+## Hosted Supabase environment
 
-Use two separate hosted projects: `portfolio-staging` for Vercel Preview and
-`portfolio-production` for Vercel Production. For an Indonesia-based audience,
-`ap-southeast-1` (Singapore) is the recommended starting region when it is
-available; choose the nearest supported region if the project requirements differ.
+The portfolio runs against a single hosted Supabase project,
+`portfolio-production` (ref `gnhhfysekpszoopqdlyo`), in `ap-southeast-1`
+(Singapore) for the Indonesia-based audience. Local development uses the local
+Supabase stack seeded with `supabase/seed.sql`; the hosted project never
+receives seed data.
 
 Authenticate the CLI with `supabase login` or a locally configured
-`SUPABASE_ACCESS_TOKEN`. Keep database passwords in a password manager or local
-shell variables; never paste them into this repository or commit them.
-After creation, retrieve each project's current publishable and secret API keys
-from the Supabase dashboard. Store them in the deployment secret manager using
-the names in `.env.example`; the secret key is server-only and must never use a
-`NEXT_PUBLIC_*` name.
+`SUPABASE_ACCESS_TOKEN`. Keep the database password in a password manager or
+local shell variables; never paste it into this repository or commit it.
+After creation, retrieve the project's publishable and secret API keys from
+the Supabase dashboard and store them in the deployment secret manager using
+the names in `.env.example`; the secret key is server-only and must never use
+a `NEXT_PUBLIC_*` name.
 
-Create each project under the intended Supabase organization, recording its project
-ref after creation:
-
-```bash
-supabase projects create portfolio-staging \
-  --org-id "$SUPABASE_ORG_ID" \
-  --region ap-southeast-1 \
-  --db-password "$STAGING_DB_PASSWORD"
-supabase projects create portfolio-production \
-  --org-id "$SUPABASE_ORG_ID" \
-  --region ap-southeast-1 \
-  --db-password "$PRODUCTION_DB_PASSWORD"
-```
-
-Link and migrate staging first. The seed is for staging only:
+Link and migrate the hosted project:
 
 ```bash
-supabase link --project-ref "$STAGING_PROJECT_REF" --password "$STAGING_DB_PASSWORD"
-supabase migration list --linked
-supabase db push --linked --include-seed
-supabase test db --linked
-```
-
-Link production separately and omit `--include-seed`; production must receive
-migrations only until real, verified content is entered through the admin CMS:
-
-```bash
-supabase link --project-ref "$PRODUCTION_PROJECT_REF" --password "$PRODUCTION_DB_PASSWORD"
+supabase link --project-ref gnhhfysekpszoopqdlyo
 supabase migration list --linked
 supabase db push --linked
 ```
 
-After each migration, confirm the migration lists match the files in
+Never run `supabase db push --include-seed` against the hosted project:
+`supabase/seed.sql` contains development sample content, and production must
+receive migrations only until real, verified content is entered through the
+admin CMS.
+
+After each migration, confirm the migration list matches the files in
 `supabase/migrations/`. In the Supabase SQL Editor, verify the storage contract:
 
 ```sql
@@ -91,39 +73,36 @@ from pg_policies
 where schemaname = 'storage' and tablename = 'objects';
 ```
 
-Run the following as the `anon` role inside a transaction on staging; the seeded
-published pages should be visible, the seeded draft project should remain hidden,
-and the privilege check should be false:
+Verify the anonymous access boundary as the `anon` role inside a transaction;
+published pages must be readable (an empty result is expected until real
+content is entered) and the inquiry insert privilege must be false:
 
 ```sql
 begin;
 set local role anon;
 select slug from public.pages where status = 'published' order by slug;
-select slug from public.projects where slug = 'development-sample-project';
 select has_table_privilege('anon', 'public.inquiries', 'insert');
 rollback;
 ```
 
-Repeat the no-sample-content check on production before connecting Vercel. Do not
-run `supabase db push --include-seed` against production.
+The same boundary is observable over the Data API: `GET
+/rest/v1/pages?select=slug&status=eq.published` with the publishable key
+returns `200 []` until content exists, and `POST /rest/v1/inquiries` with only
+the publishable key must return 401.
 
 ### Run hosted migrations from GitHub
 
-The same setup can run without database credentials on a developer laptop. In
-GitHub, create two Environments named `staging` and `production`. Add these to
-each Environment:
+Migrations can be applied without database credentials on a developer laptop.
+In GitHub, create an Environment named `production` and protect it with
+required reviewers before using it. Add:
 
 - Secret `SUPABASE_ACCESS_TOKEN`: a Supabase personal access token.
-- Secret `SUPABASE_DB_PASSWORD`: that environment's database password.
-- Variable `SUPABASE_PROJECT_REF`: the environment's project ref (staging is
-  `wbxfcritqkcjrkblndnc`).
+- Secret `SUPABASE_DB_PASSWORD`: the production database password.
+- Variable `SUPABASE_PROJECT_REF`: `gnhhfysekpszoopqdlyo`.
 
-Run `Staging Database` from the Actions tab. Enable `include_seed` only for the
-first run against an empty staging database; later runs should leave it disabled.
-The workflow links the project, applies migrations, and runs the hosted RLS
-regression tests. Run `Production Database` only after reviewing the migration
-list; it never includes `seed.sql`. Protect the `production` Environment with
-required reviewers before using it.
+Run `Production Database` from the Actions tab only after reviewing the
+migration list; it links the project, applies migrations, and never includes
+`seed.sql`.
 
 ## Quality checks
 
@@ -135,7 +114,7 @@ npm run format:check
 npm run build
 ```
 
-Run `npm run test:e2e` when local Supabase is configured and Playwright browsers are installed with `npx playwright install`. The manual `Staging Integration` workflow runs the same smoke tests against staging using GitHub Environment `staging` secrets.
+Run `npm run test:e2e` when local Supabase is configured and Playwright browsers are installed with `npx playwright install`. The manual `Integration` workflow runs the same smoke tests using GitHub Environment `production` secrets.
 
 ## Contribution workflow
 
