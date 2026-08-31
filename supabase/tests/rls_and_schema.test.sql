@@ -1,6 +1,11 @@
 -- BE-014: regression coverage for public visibility, admin mutations, and
 -- schema constraints. Every fixture is rolled back at the end of the suite.
 
+-- pgTAP ships with local development but must be enabled on hosted projects
+-- before `supabase test db --linked` can run. Keep this outside the suite
+-- transaction so the enablement persists across runs.
+create extension if not exists pgtap with schema extensions;
+
 begin;
 
 select plan(16);
