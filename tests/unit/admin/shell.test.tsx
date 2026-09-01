@@ -59,4 +59,25 @@ describe("AdminShell", () => {
 
     expect(screen.getByRole("button", { name: "Log out" })).toBeInTheDocument();
   });
+
+  it("signs out through a POST form so no prefetch or preload can end the session", () => {
+    // Regression: the default slot used to be <Link href="/auth/signout">. Next.js
+    // prefetches in-viewport links in production, so simply opening an admin page
+    // issued GET /auth/signout and destroyed the session mid-visit.
+    render(
+      <AdminShell profile={{ displayName: "Aurel Porto" }}>
+        <p>Content</p>
+      </AdminShell>,
+    );
+
+    expect(screen.queryByRole("link", { name: "Sign out" })).not.toBeInTheDocument();
+
+    const signOut = screen.getByRole("button", { name: "Sign out" });
+    expect(signOut).toHaveAttribute("type", "submit");
+
+    const form = signOut.closest("form");
+    expect(form).not.toBeNull();
+    expect(form).toHaveAttribute("method", "post");
+    expect(form).toHaveAttribute("action", "/auth/signout");
+  });
 });

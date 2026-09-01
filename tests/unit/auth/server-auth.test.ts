@@ -20,7 +20,7 @@ vi.mock("@/lib/supabase/server", () => ({
 }));
 
 import { loginAction } from "@/app/auth/login/actions";
-import { GET as signout } from "@/app/auth/signout/route";
+import * as signoutRoute from "@/app/auth/signout/route";
 import { requireAdmin } from "@/lib/auth/require-admin";
 
 function navigationError(kind: string, destination?: string) {
@@ -161,12 +161,21 @@ describe("signout route", () => {
     const signOut = vi.fn().mockResolvedValue({ error: null });
     mocks.createServerSupabaseClient.mockResolvedValue({ auth: { signOut } });
 
-    const response = await signout(new Request("https://aurelporto.test/auth/signout"));
+    const response = await signoutRoute.POST(
+      new Request("https://aurelporto.test/auth/signout", { method: "POST" }),
+    );
 
     expect(signOut).toHaveBeenCalledOnce();
     expect(mocks.responseRedirect).toHaveBeenCalledWith(
       new URL("https://aurelporto.test/auth/login"),
+      303,
     );
     expect(response).toEqual({ url: new URL("https://aurelporto.test/auth/login") });
+  });
+
+  it("exposes no GET handler, so no prefetch or preload can end a session", () => {
+    // Regression: a GET handler let Next.js viewport prefetching sign the admin
+    // out in the background while they were browsing /admin.
+    expect("GET" in signoutRoute).toBe(false);
   });
 });

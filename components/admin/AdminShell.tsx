@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 
@@ -18,13 +17,18 @@ export interface AdminShellProps {
   profile?: AdminProfile | null;
 }
 
+// Sign out is a POST form, never a link. Next.js prefetches in-viewport links in
+// production, so a <Link href="/auth/signout"> made the browser end the session
+// on its own the moment an admin page rendered.
 const defaultLogoutSlot = (
-  <Link
-    href="/auth/signout"
-    className="type-meta hover:text-warm-white inline-flex min-h-11 items-center text-white/75 transition-colors duration-(--duration-quick)"
-  >
-    Sign out
-  </Link>
+  <form action="/auth/signout" method="post">
+    <button
+      type="submit"
+      className="type-meta hover:text-warm-white inline-flex min-h-11 items-center text-white/75 transition-colors duration-(--duration-quick)"
+    >
+      Sign out
+    </button>
+  </form>
 );
 
 export function AdminShell({ children, logoutSlot = defaultLogoutSlot, profile }: AdminShellProps) {

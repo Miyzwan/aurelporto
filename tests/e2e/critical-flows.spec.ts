@@ -130,9 +130,17 @@ test.describe("Critical Product Flows (INT-016 & Audit F-04)", () => {
     }
   });
 
-  test("13. Signout endpoint redirects unauthenticated caller to login", async ({ page }) => {
-    await page.goto("/auth/signout");
-    await expect(page).toHaveURL(/\/auth\/login/);
+  test("13. Signout endpoint refuses GET so prefetching cannot end a session", async ({
+    request,
+  }) => {
+    // Regression: as a GET route, Next.js viewport prefetching of the admin
+    // sidebar's sign-out link signed the admin out while they were browsing.
+    const getResponse = await request.get("/auth/signout", { maxRedirects: 0 });
+    expect(getResponse.status()).toBe(405);
+
+    const postResponse = await request.post("/auth/signout", { maxRedirects: 0 });
+    expect(postResponse.status()).toBe(303);
+    expect(postResponse.headers()["location"]).toContain("/auth/login");
   });
 
   test("14. Custom 404 page renders design system layout and return link", async ({ page }) => {
