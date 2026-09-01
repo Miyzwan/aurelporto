@@ -37,6 +37,12 @@ function supabaseStorageImagePattern(): SupabaseStorageImagePattern {
 }
 
 const nextConfig: NextConfig = {
+  // Version skew protection. Every build mints new Server Action ids, so a tab
+  // opened before a deploy posts an id the new build does not know and the
+  // request fails with "Failed to find Server Action" — which the admin login
+  // surfaced as a generic error page. With a deployment id, Next detects the
+  // mismatch and forces a full reload instead of failing the request.
+  deploymentId: process.env.VERCEL_DEPLOYMENT_ID,
   images: {
     remotePatterns: [supabaseStorageImagePattern()],
   },
