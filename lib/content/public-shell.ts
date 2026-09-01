@@ -1,3 +1,5 @@
+import { PHASE_PRODUCTION_BUILD } from "next/constants";
+
 import { getPublicNavigation, getPublicSiteSettings } from "@/lib/data/site";
 import { RepositoryError } from "@/lib/data/errors";
 import { placeholderSiteSettings } from "@/lib/content/placeholder-shell";
@@ -59,4 +61,41 @@ export async function getPublicShellData(): Promise<PublicShellData> {
         }
       : null,
   };
+}
+
+/** The shell a page falls back to when site settings and navigation cannot be read. */
+export const PUBLIC_SHELL_FALLBACK: PublicShellData = {
+  siteSettings: placeholderSiteSettings,
+  headerNavigation: [],
+  footerNavigation: [],
+  socialNavigation: [],
+  cta: null,
+};
+
+/**
+ * Every public page renders through this shell, so a failed read has to be
+ * handled in two different ways.
+ *
+ * At runtime, degrading to an empty shell keeps the site up. During `next build`
+ * it must not: the public routes are prerendered, so a failed read would be
+ * frozen into static HTML as a site with no navigation, and nothing afterwards
+ * would reveal it. Failing the build is the only point where that is still
+ * visible. This is exactly how a deployment shipped with an empty navbar.
+ */
+export async function getPublicShellDataWithFallback(): Promise<PublicShellData> {
+  try {
+    return await getPublicShellData();
+  } catch (error) {
+    if (process.env.NEXT_PHASE === PHASE_PRODUCTION_BUILD) {
+      throw new Error(
+        "[public-shell] could not read site settings or navigation during the production build. " +
+          "Refusing to prerender a portfolio with no navigation — verify the Supabase credentials " +
+          "and that every migration has been applied to the target project.",
+        { cause: error },
+      );
+    }
+
+    console.error("[public-shell] falling back to an empty shell:", error);
+    return PUBLIC_SHELL_FALLBACK;
+  }
 }

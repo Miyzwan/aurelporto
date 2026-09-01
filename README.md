@@ -100,9 +100,31 @@ required reviewers before using it. Add:
 - Secret `SUPABASE_DB_PASSWORD`: the production database password.
 - Variable `SUPABASE_PROJECT_REF`: `gnhhfysekpszoopqdlyo`.
 
+The workflow targets the GitHub Environment named exactly `Production`. If the
+environment holds no secrets the run fails at its configuration check, which is
+the intended behaviour — it never falls back to an unprotected environment.
+
 Run `Production Database` from the Actions tab only after reviewing the
 migration list; it links the project, applies migrations, and never includes
 `seed.sql`.
+
+**Apply the migrations before the first Vercel build.** The public routes are
+prerendered at build time, so a build that cannot read Supabase would freeze a
+site with no navigation into static HTML. The build now refuses to do that and
+fails with `[public-shell] could not read site settings or navigation during the
+production build`, naming the underlying Supabase error as its cause. The
+correct order for a new environment is:
+
+1. apply migrations to the hosted project;
+2. set the four environment variables in Vercel;
+3. deploy;
+4. enter navigation and content through `/admin`.
+
+Migrations create the `site_settings` singleton (`id = 1`) with neutral
+defaults, because admins hold only `select` and `update` on that table and can
+never insert the row themselves. Replace those defaults through `/admin/site`.
+Navigation items are ordinary content and start empty — the header stays bare
+until they are created in `/admin/navigation`.
 
 ### Admin access
 

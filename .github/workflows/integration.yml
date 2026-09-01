@@ -10,7 +10,7 @@ jobs:
   playwright:
     name: Playwright smoke tests
     runs-on: ubuntu-latest
-    environment: production
+    environment: Production
     env:
       CI: true
       NEXT_PUBLIC_SITE_URL: http://127.0.0.1:3000

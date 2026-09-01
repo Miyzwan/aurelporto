@@ -2,19 +2,11 @@ import { PortfolioAnalytics } from "@/components/analytics/PortfolioAnalytics";
 import { ReducedMotionProvider, SmoothScrollProvider } from "@/components/motion";
 import { Footer } from "@/components/public/Footer";
 import { Header } from "@/components/public/Header";
-import { getPublicShellData } from "@/lib/content/public-shell";
-
-import { placeholderSiteSettings } from "@/lib/content/placeholder-shell";
+import { getPublicShellDataWithFallback } from "@/lib/content/public-shell";
 
 export default async function PublicLayout({ children }: LayoutProps<"/">) {
   const { siteSettings, headerNavigation, footerNavigation, socialNavigation, cta } =
-    await getPublicShellData().catch(() => ({
-      siteSettings: placeholderSiteSettings,
-      headerNavigation: [],
-      footerNavigation: [],
-      socialNavigation: [],
-      cta: null,
-    }));
+    await getPublicShellDataWithFallback();
 
   return (
     <ReducedMotionProvider>

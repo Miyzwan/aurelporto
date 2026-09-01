@@ -45,7 +45,24 @@ values (
   }'::jsonb,
   '2026-01-01 00:00:00+00'::timestamptz,
   '2026-01-01 00:00:00+00'::timestamptz
-);
+)
+-- The singleton is bootstrapped by a migration, so the development seed refreshes
+-- it instead of colliding with it during `supabase db reset`.
+on conflict (id) do update set
+  site_name = excluded.site_name,
+  professional_role = excluded.professional_role,
+  location = excluded.location,
+  service_area = excluded.service_area,
+  email = excluded.email,
+  phone = excluded.phone,
+  whatsapp = excluded.whatsapp,
+  social_links = excluded.social_links,
+  footer_text = excluded.footer_text,
+  default_seo_title = excluded.default_seo_title,
+  default_seo_description = excluded.default_seo_description,
+  inquiry_config = excluded.inquiry_config,
+  created_at = excluded.created_at,
+  updated_at = excluded.updated_at;
 
 insert into public.pages (
   id,
