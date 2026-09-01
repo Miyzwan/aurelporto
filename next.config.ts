@@ -36,6 +36,21 @@ function supabaseStorageImagePattern(): SupabaseStorageImagePattern {
   };
 }
 
+/**
+ * Next 16 refuses to optimize images whose host resolves to a private or
+ * loopback address, as SSRF protection. A local `supabase start` serves storage
+ * from 127.0.0.1, so every portfolio image 400s in local development until the
+ * restriction is lifted. It is lifted only for a loopback Supabase host: a
+ * hosted project keeps the protection.
+ */
+function supabaseHostIsLoopback(): boolean {
+  const hostname = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim()
+    ? new URL(process.env.NEXT_PUBLIC_SUPABASE_URL.trim()).hostname
+    : "";
+
+  return hostname === "localhost" || hostname === "127.0.0.1" || hostname === "::1";
+}
+
 const nextConfig: NextConfig = {
   // Version skew protection. Every build mints new Server Action ids, so a tab
   // opened before a deploy posts an id the new build does not know and the
@@ -45,6 +60,7 @@ const nextConfig: NextConfig = {
   deploymentId: process.env.VERCEL_DEPLOYMENT_ID,
   images: {
     remotePatterns: [supabaseStorageImagePattern()],
+    dangerouslyAllowLocalIP: supabaseHostIsLoopback(),
   },
 };
 

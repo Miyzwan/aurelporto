@@ -13,6 +13,7 @@
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "verify:client-bundle": "node scripts/verify-client-bundle-secrets.mjs",
+    "seed:content": "node scripts/seed-portfolio-content.mjs",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
   },
