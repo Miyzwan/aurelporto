@@ -4,12 +4,30 @@ import { ContentValidationError } from "@/lib/validation/errors";
 
 export type RepositoryErrorCode = "database" | "not_found";
 
+/**
+ * Supabase returns plain objects rather than Errors, so `cause` alone is not
+ * printed by Node's error formatting. Without this detail a failure reads only
+ * as "Could not read site settings", which is indistinguishable between a wrong
+ * API key, a missing table, and a denied grant — the exact ambiguity that made a
+ * broken production deployment take a full investigation to explain.
+ */
+function describeCause(cause: unknown): string {
+  if (!cause || typeof cause !== "object") return "";
+
+  const { message, code, hint } = cause as { message?: string; code?: string; hint?: string };
+  const parts = [code && `[${code}]`, message, hint && `(hint: ${hint})`].filter(Boolean);
+
+  return parts.length > 0 ? ` ${parts.join(" ")}` : "";
+}
+
 export class RepositoryError extends Error {
   readonly code: RepositoryErrorCode;
 
   constructor(code: RepositoryErrorCode, resource: string, cause?: unknown) {
     super(
-      code === "not_found" ? `${resource} was not found.` : `Could not read ${resource}.`,
+      code === "not_found"
+        ? `${resource} was not found.`
+        : `Could not read ${resource}.${describeCause(cause)}`,
       cause instanceof Error ? { cause } : undefined,
     );
     this.name = "RepositoryError";

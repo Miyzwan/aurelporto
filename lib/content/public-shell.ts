@@ -87,10 +87,15 @@ export async function getPublicShellDataWithFallback(): Promise<PublicShellData>
     return await getPublicShellData();
   } catch (error) {
     if (process.env.NEXT_PHASE === PHASE_PRODUCTION_BUILD) {
+      // The host is a NEXT_PUBLIC_ value, so naming it is safe and it settles the
+      // most common cause outright: a build pointed at the wrong Supabase project.
+      const host = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "<unset>";
+
       throw new Error(
         "[public-shell] could not read site settings or navigation during the production build. " +
-          "Refusing to prerender a portfolio with no navigation — verify the Supabase credentials " +
-          "and that every migration has been applied to the target project.",
+          `Refusing to prerender a portfolio with no navigation. Configured Supabase URL: ${host}. ` +
+          "Verify the publishable key matches that project and that every migration has been applied. " +
+          `Underlying failure: ${error instanceof Error ? error.message : String(error)}`,
         { cause: error },
       );
     }
